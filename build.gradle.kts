@@ -38,6 +38,10 @@ dependencies {
 	implementation("org.apache.kafka:kafka-streams")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+	implementation("com.amazonaws:aws-java-sdk-s3:1.12.638")
+	implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
+	implementation("org.springframework.boot:spring-boot-starter-thymeleaf:3.2.3")
+
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("com.mysql:mysql-connector-j")
 	annotationProcessor("org.projectlombok:lombok")

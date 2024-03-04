@@ -43,45 +43,54 @@ class UploadService(
                 uploadRepository.deletePart(video.originalFilename, i)
             }
 
-            //이제 ts로 변경 필요
-            val tsFilePath = UUID.randomUUID().toString() + ".ts"
+            //m3u8과 ts들로 변경해야함
+            val outputUUID = UUID.randomUUID().toString()
+            val m3u8Path = "$outputUUID.m3u8"
             println(inputFilePath.toString())
 
             //mp4 to ts
-            mp4ToTs(inputFilePath, tsFilePath)
+            mp4ToM3U8(inputFilePath, m3u8Path,outputUUID)
 
-            //ts 분할
-            divideTsFile(tsFilePath)
+//            //ts 분할
+//            divideTsFile(tsFilePath)
 
             // 여러 TS들을 S3에 업로드
-            uploadRepository.uploadVideoTs(tsFilePath)
-            return ResponseEntity(HttpStatus.OK)
+            uploadRepository.uploadVideoTs(outputUUID)
+            uploadRepository.uploadM3U8(m3u8Path)
+            println("https://video-stream-spring.s3.ap-northeast-2.amazonaws.com/$m3u8Path")
+            return ResponseEntity(outputUUID,HttpStatus.OK)
         } else {
             return ResponseEntity(HttpStatus.PARTIAL_CONTENT)
         }
     }
 
-    private fun divideTsFile(tsFilePath: String) {
-        val segmentBuilder =
-            FFmpegBuilder().setInput(tsFilePath)
-                .addOutput("${tsFilePath}_%03d.ts")
-                .addExtraArgs("-c", "copy")
-                .addExtraArgs("-map", "0")
-                .addExtraArgs("-segment_time", "5")
-                .addExtraArgs("-f", "segment")
-                .addExtraArgs("-reset_timestamps", "1")
-                .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL)
-                .done()
-        FFmpegExecutor(ffmpeg, ffprobe).createJob(segmentBuilder).run()
-        File(tsFilePath).delete()
-    }
+//    private fun divideTsFile(tsFilePath: String) {
+//        val segmentBuilder =
+//            FFmpegBuilder().setInput(tsFilePath)
+//                .addOutput("${tsFilePath}_%03d.ts")
+//                .addExtraArgs("-c", "copy")
+//                .addExtraArgs("-map", "0")
+//                .addExtraArgs("-segment_time", "5")
+//                .addExtraArgs("-f", "segment")
+//                .addExtraArgs("-reset_timestamps", "1")
+//                .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL)
+//                .done()
+//        FFmpegExecutor(ffmpeg, ffprobe).createJob(segmentBuilder).run()
+//        File(tsFilePath).delete()
+//    }
 
-    private fun mp4ToTs(inputFilePath: Path, tsFilePath: String) {
+    private fun mp4ToM3U8(inputFilePath: Path, m3u8Path: String, tsFilePath : String) {
         val builder = FFmpegBuilder()
             .setInput(inputFilePath.toString())
-            .addOutput(tsFilePath).addExtraArgs("-c", "copy")
+            .addOutput(m3u8Path)
+            .addExtraArgs("-c", "copy")
             .addExtraArgs("-bsf:v", "h264_mp4toannexb")
-            .addExtraArgs("-f", "mpegts")
+            .addExtraArgs("-hls_segment_filename","${tsFilePath}_%03d.ts")
+            .addExtraArgs("-start_number","0")
+            .addExtraArgs("-hls_time","5")
+            .addExtraArgs("-hls_list_size","0")
+            .addExtraArgs("-hls_base_url","https://video-stream-spring.s3.ap-northeast-2.amazonaws.com/")
+            .addExtraArgs("-f", "hls")
             .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL).done()
         FFmpegExecutor(ffmpeg, ffprobe).createJob(builder).run()
         File(inputFilePath.toString()).delete()

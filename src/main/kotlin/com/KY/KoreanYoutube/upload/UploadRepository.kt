@@ -67,4 +67,18 @@ class UploadRepository(
         amazonS3.deleteObject("video-stream-spring","$originalFilename.part$i" )
     }
 
+    fun uploadM3U8(m3u8Path: String) {
+        println("Upload M3U8")
+        val m3u8File = File(m3u8Path)
+        amazonS3.putObject(
+            PutObjectRequest(
+                "video-stream-spring",
+                m3u8Path,
+                m3u8File.inputStream(),
+                ObjectMetadata()
+            )
+        )
+        m3u8File.delete()
+    }
+
 }

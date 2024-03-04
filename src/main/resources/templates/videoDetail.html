@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang = "ko">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hls_test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.11.5/video-js.min.css"
+          integrity="sha512-7ygWwJCkEsI7sNqXtHyZv+W9eCZwAgNcYwaV7tdLvWtDxTmASJLyigHOhufdziF812S99GnAM8JuDIc2+Ppkiw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.11.5/video.min.js"
+            integrity="sha512-LrBuAbkH/teezjuzBrK3ov4NSoWJE5cYHDQZoKGUtaDMV0nx9K8BTbXrY4zHxS6fStAVEvPadbpRQB6aBPmqng=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+</head>
+
+<body>
+<video id="my_video" class="video-js" controls width="800" height="500" >
+    <source th:src = "${m3u8Url}" type="application/x-mpegURL">
+</video>
+
+<script>
+    var player = videojs('my_video');
+    player.play();
+</script>
+
+</body>
+
+</html>

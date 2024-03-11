@@ -8,7 +8,7 @@
 
 <input id="video-file" type="file" name="file">
 <button onclick="sendVideoChunks()">업로드</button>
-<div id="result"></div>
+<a id="result"></a>
 
 </body>
 <script>
@@ -52,7 +52,10 @@
                     }
                     // 마지막 파일까지 전송 되면
                 } else if (resp.status === 200) {
-                    resp.text().then(data => resultElement.textContent = data);
+                    resp.text().then(data => {
+                        resultElement.textContent = "동영상 보러가기"
+                        resultElement.href = "http://localhost:8080/detail/" +data
+                    });
                 }
             }).catch(err => {
                 console.error("Error uploading video chunk");

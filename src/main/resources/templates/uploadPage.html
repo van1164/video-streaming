@@ -7,6 +7,7 @@
 <body>
 
 <input id="video-file" type="file" name="file">
+<label for="title">제목</label><input id="title" type="text" name="title">
 <button onclick="sendVideoChunks()">업로드</button>
 <a id="result"></a>
 
@@ -16,7 +17,8 @@
         const chunkSize = 1024 * 1024 * 3; // 1MB
         const file = document.getElementById("video-file").files[0];
         const resultElement = document.getElementById("result");
-
+        const title = document.getElementById("title").value
+        console.log(title)
         // total size 계산
         const totalChunks = Math.ceil(file.size / chunkSize);
         let currentChunk = 0;
@@ -33,7 +35,7 @@
             // form data 형식으로 전송
             const formData = new FormData();
             formData.append("video", chunk);
-            const json = JSON.stringify({title : "title", chunkNumber : currentChunk, totalChunk : totalChunks})
+            const json = JSON.stringify({title : title, chunkNumber : currentChunk, totalChunk : totalChunks})
             formData.append("videoData", new Blob([json],{type:"application/json"}) );
 
 

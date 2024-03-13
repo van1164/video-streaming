@@ -81,4 +81,17 @@ class UploadRepository(
         m3u8File.delete()
     }
 
+    fun uploadThumbnail(thumbNailPath: String) {
+        val thumbNailFile = File(thumbNailPath)
+        amazonS3.putObject(
+            PutObjectRequest(
+                "video-stream-spring",
+                thumbNailPath,
+                thumbNailFile.inputStream(),
+                ObjectMetadata()
+            )
+        )
+        thumbNailFile.delete()
+    }
+
 }

@@ -1,4 +1,10 @@
 package com.KY.KoreanYoutube.video
 
-class VideoRepository {
+import com.KY.KoreanYoutube.domain.Video
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
+
+@Repository
+interface VideoRepository : JpaRepository<Video,String> {
+
 }

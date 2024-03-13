@@ -1,4 +1,9 @@
 package com.KY.KoreanYoutube.main
 
-class mainRepository {
+import org.springframework.stereotype.Repository
+
+
+@Repository
+class MainRepository {
+
 }

@@ -83,7 +83,7 @@ class UploadService(
 
             return ResponseEntity(outputUUID, HttpStatus.OK)
         } else {
-            return ResponseEntity(HttpStatus.PARTIAL_CONTENT)
+            return ResponseEntity(HttpStatus.PARTIAL_CONTENT)   
         }
     }
 

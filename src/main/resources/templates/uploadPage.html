@@ -14,6 +14,76 @@
 </body>
 <script>
     const sendVideoChunks = () => {
+        let startTime = new Date();  // 시작
+        const chunkSize = 1024 * 1024 * 3; // 1MB
+        const file = document.getElementById("video-file").files[0];
+        const resultElement = document.getElementById("result");
+        const title = document.getElementById("title").value
+        // total size 계산
+        const totalChunks = Math.ceil(file.size / chunkSize);
+        let uploadFinish = 0;
+        let promises = [];
+        for(let currentChunk =0; currentChunk<totalChunks; currentChunk++) {
+            let startPartTime = new Date();  // 시작
+            // chunk size 만큼 데이터 분할
+            const start = currentChunk * chunkSize;
+            const end = Math.min(start + chunkSize, file.size);
+
+            const chunk = file.slice(start, end);
+            console.log(currentChunk,totalChunks)
+            // form data 형식으로 전송
+            const formData = new FormData();
+            formData.append("video", chunk);
+            const json = JSON.stringify({title: title, chunkNumber: currentChunk, totalChunk: totalChunks})
+            formData.append("videoData", new Blob([json], {type: "application/json"}));
+            let promise = fetch("/api/v1/upload/videoPart", {
+                method: "POST",
+                body: formData,
+                headers: {}
+            }).then(resp => {
+                // 진행률 표시
+                resultElement.textContent = Math.round(currentChunk / totalChunks * 100) + "%"
+                let endPart = new Date();  // 종료
+                console.log("chunk" + String(currentChunk) + ":" + String(endPart - startPartTime));
+                uploadFinish++;
+
+            }).catch(err => {
+                console.error("Error uploading video chunk");
+            });
+
+            promises.push(promise)
+        }
+
+        Promise.all(promises).then(
+            () => {
+                console.log("모든 chunk 업로드하는데 걸린시간"+ String(new Date() - startTime))
+                const formData = new FormData();
+                formData.append("video", file.slice(0,chunkSize));
+                const json = JSON.stringify({title: title, chunkNumber: totalChunks, totalChunk: totalChunks})
+                formData.append("videoData", new Blob([json], {type: "application/json"}));
+                fetch("/api/v1/upload/videoPartLast", {
+                    method: "POST",
+                    body: formData,
+                    headers: {}
+                }).then(resp => {
+                    resp.text().then(data => {
+                        console.log("최종 걸린시간: " + String(new Date() - startTime));
+                        resultElement.textContent = "동영상 보러가기"
+                        resultElement.href = "http://localhost:8080/detail/" + data
+                    });
+
+                }).catch(err => {
+                    console.error("Error uploading video chunk");
+                });
+            }
+        )
+
+
+    }
+
+
+    const sendVideoChunksOriginal = () => {
+        let startTime = new Date();  // 시작
         const chunkSize = 1024 * 1024 * 3; // 1MB
         const file = document.getElementById("video-file").files[0];
         const resultElement = document.getElementById("result");
@@ -55,6 +125,7 @@
                     // 마지막 파일까지 전송 되면
                 } else if (resp.status === 200) {
                     resp.text().then(data => {
+                        console.log("최종 걸린시간: " + String(new Date() - startTime));
                         resultElement.textContent = "동영상 보러가기"
                         resultElement.href = "http://localhost:8080/detail/" +data
                     });

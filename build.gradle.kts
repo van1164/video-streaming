@@ -49,6 +49,7 @@ dependencies {
 	testImplementation("io.projectreactor:reactor-test")
 	testImplementation("org.springframework.batch:spring-batch-test")
 	testImplementation("org.springframework.security:spring-security-test")
+	implementation("io.github.microutils:kotlin-logging:1.12.0")
 }
 
 tasks.withType<KotlinCompile> {

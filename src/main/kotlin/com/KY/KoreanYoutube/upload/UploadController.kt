@@ -21,11 +21,28 @@ class UploadController(
     fun uploadVideo(@RequestPart(name = "video") video: MultipartFile,
                     @RequestPart(name = "videoData")videoData: UploadVideoPartDTO): ResponseEntity<Any> {
 
+        return uploadService.uploadVideo(video, videoData)
+
+
+    }
+
+    @PostMapping("/videoPart")
+    fun uploadVideoPart(@RequestPart(name = "video") video: MultipartFile,
+                    @RequestPart(name = "videoData")videoData: UploadVideoPartDTO): ResponseEntity<Any> {
+
         return uploadService.uploadVideoPart(video, videoData)
 
 
     }
 
+    @PostMapping("/videoPartLast")
+     fun uploadVideoLast(@RequestPart(name = "video") video: MultipartFile,
+                                @RequestPart(name = "videoData")videoData: UploadVideoPartDTO): ResponseEntity<Any> {
+
+        return uploadService.uploadVideoPartLast(video, videoData)
+
+
+    }
     @RequestMapping("/uploadPage")
     fun uploadPage() : String{
         return "uploadPage"

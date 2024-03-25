@@ -9,12 +9,8 @@
 >기존에는 Chunk들을 순차적으로 보내는 방식을 사용했었다.
 >이번에는 모든 Chunk에 대한 요청을 동시에 보내고 Promise를 통해 다 보내지면 그 다음 동작을 하도록 나누어 보았다.
 
-### 기존 방식
-![](https://velog.velcdn.com/images/van1164/post/bfc7ea43-b952-4db0-a7ca-4388c1e844cb/image.png)
+![](https://velog.velcdn.com/images/van1164/post/9694046e-4c06-479e-91c7-bfeeb7b9f19b/image.png)
 
-
-### Promise를 사용한 방식
-![](https://velog.velcdn.com/images/van1164/post/57edfab5-ce2c-4651-a674-13704f079ed7/image.png)
 
 
 ## 약 270MB 영상으로 업로드 속도 비교

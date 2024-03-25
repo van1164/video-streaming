@@ -175,3 +175,5 @@ gradle-app.setting
 .gradle
 
 
+
+src/main/resources/application.properties

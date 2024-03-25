@@ -6,6 +6,7 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Repository
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
+import java.io.FileInputStream
 
 private val logger = KotlinLogging.logger {} // KotlinLogging 사용
 @Repository
@@ -35,7 +36,17 @@ class UploadRepository(
             }
         }
 
+    }
 
+    fun uploadVideoTsVer2(tsPath: String, tsFileInputStream : FileInputStream){
+        amazonS3.putObject(
+            PutObjectRequest(
+                "video-stream-spring",
+                tsPath,
+                tsFileInputStream,
+                ObjectMetadata()
+            )
+        )
     }
 
     fun uploadVideoPart(video: MultipartFile, chunkNumber: Int): Boolean {
@@ -90,7 +101,7 @@ class UploadRepository(
 
 
     fun deletePart(originalFilename: String?, i: Int){
-        println("deletePart : $i")
+        logger.info("deletePart : $i")
         amazonS3.deleteObject("video-stream-spring","$originalFilename.part$i" )
     }
 

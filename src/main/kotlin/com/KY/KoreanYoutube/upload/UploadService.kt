@@ -42,8 +42,8 @@ class UploadService(
     val ffmpeg: FFmpeg,
     val ffprobe: FFprobe
 ) {
-     fun uploadVideoPartLast(video: MultipartFile, videoData: UploadVideoPartDTO): ResponseEntity<Any> {
-        //val futureList = mutableListOf<CompletableFuture<S3ObjectInputStream>>()
+    fun uploadVideoPartLast(video: MultipartFile, videoData: UploadVideoPartDTO): String {
+        val futureList = mutableListOf<CompletableFuture<ByteArray>>()
         //여러 part를 하나의 파일로 만들기
         val stopWatch = StopWatch()
         stopWatch.start("mp4로 만드는데 걸린 시간")
@@ -52,83 +52,92 @@ class UploadService(
         runBlocking {
             Files.createFile(inputFilePath)
         }
-        runBlocking {
-            for (i: Int in 0 until videoData.totalChunk) {
-                launch {
-                        logger.info{ "videoPart : $i" }
-                        val videoPart = uploadRepository.getPartByteArray(
-                            bucketUrl,
-                            video.originalFilename,
-                            i
-                        )
-                Files.write(inputFilePath, videoPart, StandardOpenOption.APPEND)
-                uploadRepository.deletePart(video.originalFilename, i)
-                }
-                //val videoPart = uploadRepository.getPart(bucketUrl, video.originalFilename, i)
-            }
+
+
+        for (i: Int in 0 until videoData.totalChunk) {
+            futureList.add(CompletableFuture.supplyAsync {
+                return@supplyAsync uploadRepository.getPartByteArray(
+                    bucketUrl,
+                    video.originalFilename,
+                    i
+                )
+            })
+            //val videoPart = uploadRepository.getPart(bucketUrl, video.originalFilename, i)
         }
 
-//        for (i: Int in 0 until videoData.totalChunk) {
-//            futureList.add(CompletableFuture.supplyAsync {
-//                return@supplyAsync uploadRepository.getPart(
-//                    bucketUrl,
-//                    video.originalFilename,
-//                    i
-//                )
-//            })
-//            //val videoPart = uploadRepository.getPart(bucketUrl, video.originalFilename, i)
-//        }
 
-//
-//        CompletableFuture.allOf(*futureList.toTypedArray())
-//            .thenApply {
-//                logger.info{"AAAAAAAAAAAAAAAA" + "allOf 접근"}
-//                futureList.forEachIndexed{i,videoPart ->
-//                    Files.write(inputFilePath, videoPart.get().readAllBytes(), StandardOpenOption.APPEND)
-//                    uploadRepository.deletePart(video.originalFilename, i)
-//                }
-//            }.await()
+        return CompletableFuture.allOf(*futureList.toTypedArray())
+            .thenApply {
+                // ts -> mp4
+                futureList.forEach{videoPart ->
+                    Files.write(inputFilePath, videoPart.get(), StandardOpenOption.APPEND)
+                }
+                stopWatch.stop()
+            }.thenAcceptAsync {
+                val futures = (0 until videoData.totalChunk).map {
+                    CompletableFuture.runAsync{uploadRepository.deletePart(video.originalFilename, it)}
+                }
+                CompletableFuture.allOf(*futures.toTypedArray()).get()
+            }
+            .thenApplyAsync {
+                stopWatch.start("썸네일 만들고 업로드하는 데 걸린 시간")
+                //thumbnail by ffmpeg
+                val thumbNailPath = UUID.randomUUID().toString() + ".jpg"
+                extractThumbnail(inputFilePath.toString(), thumbNailPath)
+                //uploadThumbnail
+                uploadRepository.uploadThumbnail(thumbNailPath)
+                stopWatch.stop()
+                return@thenApplyAsync thumbNailPath
+            }
+            .thenApplyAsync {thumbNailPath ->
+                stopWatch.start("mp4를 hls로 바꾸고 업로드하는 데 걸린 시간")
+                //mp4 to ts
 
-
-        stopWatch.stop()
-        //logger.info{"mp4로 만드는데 걸린 시간: " + (System.currentTimeMillis() - mp4start)}
-
-        //m3u8과 ts들로 변경해야함
-        val outputUUID = UUID.randomUUID().toString()
-        val m3u8Path = "$outputUUID.m3u8"
-        println(inputFilePath.toString())
-
-        stopWatch.start("썸네일 만들고 업로드하는 데 걸린 시간")
-        //val thumbNailstart = System.currentTimeMillis()
-        //thumbnail by ffmpeg
-        val thumbNailPath = UUID.randomUUID().toString() + ".jpg"
-        extractThumbnail(inputFilePath.toString(), thumbNailPath)
-        //uploadThumbnail
-        uploadRepository.uploadThumbnail(thumbNailPath)
-        stopWatch.stop()
-        //logger.info{"썸네일 만들고 업로드하는 데 걸린 시간: " + (System.currentTimeMillis() - thumbNailstart)}
-
-        stopWatch.start("mp4를 hls로 바꾸고 업로드하는 데 걸린 시간")
-        //val hlsUploadStart = System.currentTimeMillis()
-        //mp4 to ts
-        mp4ToM3U8(inputFilePath, m3u8Path, outputUUID)
+                val outputUUID = UUID.randomUUID().toString()
+                val m3u8Path = "$outputUUID.m3u8"
+                mp4ToM3U8(inputFilePath, m3u8Path, outputUUID)
 
 
-        // 여러 TS들을 S3에 업로드
-        uploadRepository.uploadVideoTs(outputUUID)
-        uploadRepository.uploadM3U8(m3u8Path)
-        println("https://video-stream-spring.s3.ap-northeast-2.amazonaws.com/$m3u8Path")
-        stopWatch.stop()
-        //logger.info{"mp4를 hls로 바꾸고 업로드하는 데 걸린 시간: " + (System.currentTimeMillis() - hlsUploadStart)}
-        videoRepository.save(
-            Video(
-                createDate = Date.from(
-                    LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()
-                ), id = outputUUID, title = videoData.title, thumbNailUrl = thumbNailPath
-            )
-        )
-        println(stopWatch.prettyPrint())
-        return ResponseEntity(outputUUID, HttpStatus.OK)
+                // 여러 TS들을 S3에 업로드
+                uploadVideoTs(outputUUID)
+
+                uploadRepository.uploadM3U8(m3u8Path)
+                stopWatch.stop()
+
+                videoRepository.save(
+                    Video(
+                        createDate = Date.from(
+                            LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()
+                        ), id = outputUUID, title = videoData.title, thumbNailUrl = thumbNailPath
+                    )
+                )
+                println(stopWatch.prettyPrint())
+                return@thenApplyAsync outputUUID
+            }.get()
+    }
+
+    private fun uploadVideoTs(outputUUID: String) {
+        val futures = mutableListOf<CompletableFuture<Void>>()
+        var count = 0
+        while (true) {
+            val tsPath = outputUUID + "_" + count.toString().padStart(3, '0') + ".ts"
+            val tsFile = File(tsPath)
+            if (tsFile.isFile) {
+                futures.add(
+                    CompletableFuture.runAsync {
+                        val tsFileInputStream = File(tsPath).inputStream()
+                        uploadRepository.uploadVideoTsVer2(tsPath, tsFileInputStream)
+                        tsFile.delete()
+                    }
+                )
+                count++
+            } else {
+                break
+            }
+
+        }
+
+        CompletableFuture.allOf(*futures.toTypedArray()).get()
     }
 
     fun uploadVideoPart(video: MultipartFile, videoData: UploadVideoPartDTO): ResponseEntity<Any> {

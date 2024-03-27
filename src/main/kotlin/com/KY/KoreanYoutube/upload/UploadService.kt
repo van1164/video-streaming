@@ -3,10 +3,8 @@ package com.KY.KoreanYoutube.upload
 import com.KY.KoreanYoutube.domain.Video
 import com.KY.KoreanYoutube.upload.dto.UploadVideoPartDTO
 import com.KY.KoreanYoutube.video.VideoRepository
-import com.amazonaws.services.s3.model.S3ObjectId
-import com.amazonaws.services.s3.model.S3ObjectInputStream
 import kotlinx.coroutines.*
-import kotlinx.coroutines.future.await
+import kotlinx.coroutines.Runnable
 import mu.KotlinLogging
 import net.bramp.ffmpeg.FFmpeg
 import net.bramp.ffmpeg.FFmpegExecutor
@@ -15,21 +13,22 @@ import net.bramp.ffmpeg.builder.FFmpegBuilder
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
 import org.springframework.web.multipart.MultipartFile
+import reactor.core.publisher.BaseSubscriber
+import reactor.core.publisher.Flux
+import reactor.util.context.Context
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.Date
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.function.Consumer
 
 private val logger = KotlinLogging.logger {} // KotlinLogging 사용
 
@@ -43,6 +42,7 @@ class UploadService(
     val ffprobe: FFprobe
 ) {
     fun uploadVideoPartLast(video: MultipartFile, videoData: UploadVideoPartDTO): String {
+
         val futureList = mutableListOf<CompletableFuture<ByteArray>>()
         //여러 part를 하나의 파일로 만들기
         val stopWatch = StopWatch()
@@ -73,47 +73,70 @@ class UploadService(
                     Files.write(inputFilePath, videoPart.get(), StandardOpenOption.APPEND)
                 }
                 stopWatch.stop()
-            }.thenAcceptAsync {
-                val futures = (0 until videoData.totalChunk).map {
-                    CompletableFuture.runAsync{uploadRepository.deletePart(video.originalFilename, it)}
-                }
-                CompletableFuture.allOf(*futures.toTypedArray()).get()
-            }
-            .thenApplyAsync {
-                stopWatch.start("썸네일 만들고 업로드하는 데 걸린 시간")
-                //thumbnail by ffmpeg
-                val thumbNailPath = UUID.randomUUID().toString() + ".jpg"
-                extractThumbnail(inputFilePath.toString(), thumbNailPath)
-                //uploadThumbnail
-                uploadRepository.uploadThumbnail(thumbNailPath)
-                stopWatch.stop()
-                return@thenApplyAsync thumbNailPath
-            }
-            .thenApplyAsync {thumbNailPath ->
-                stopWatch.start("mp4를 hls로 바꾸고 업로드하는 데 걸린 시간")
-                //mp4 to ts
-
+            }.thenApplyAsync {
                 val outputUUID = UUID.randomUUID().toString()
                 val m3u8Path = "$outputUUID.m3u8"
-                mp4ToM3U8(inputFilePath, m3u8Path, outputUUID)
-
-
-                // 여러 TS들을 S3에 업로드
-                uploadVideoTs(outputUUID)
-
-                uploadRepository.uploadM3U8(m3u8Path)
-                stopWatch.stop()
-
-                videoRepository.save(
-                    Video(
-                        createDate = Date.from(
-                            LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()
-                        ), id = outputUUID, title = videoData.title, thumbNailUrl = thumbNailPath
-                    )
-                )
+                val thumbNailPath = UUID.randomUUID().toString() + ".jpg"
+                val deleteChunkFuture = CompletableFuture.runAsync{deleteChunkFiles(videoData, video)}
+                val thumbNailFuture = CompletableFuture.runAsync{createThumbNail(inputFilePath, thumbNailPath)}
+                val saveDataFuture = CompletableFuture.runAsync{saveVideoData(outputUUID, videoData, thumbNailPath)}
+                val mp4ToHlsFuture = CompletableFuture.runAsync{mp4ToHls(inputFilePath, m3u8Path, outputUUID)}
+                CompletableFuture.allOf(deleteChunkFuture,thumbNailFuture,saveDataFuture,mp4ToHlsFuture).get()
+                return@thenApplyAsync outputUUID
+            }
+            .thenApplyAsync {outputUUID->
                 println(stopWatch.prettyPrint())
                 return@thenApplyAsync outputUUID
             }.get()
+    }
+
+    private fun mp4ToHls(
+        inputFilePath: Path,
+        m3u8Path: String,
+        outputUUID: String
+    ) {
+        logger.info("hls시작")
+       val stopWatch = StopWatch()
+        stopWatch.start("mp4를 hls로 바꾸고 업로드하는 데 걸린 시간")
+        //mp4 to ts
+
+
+        mp4ToM3U8(inputFilePath, m3u8Path, outputUUID)
+
+
+        // 여러 TS들을 S3에 업로드
+        uploadVideoTs(outputUUID)
+
+        uploadRepository.uploadM3U8(m3u8Path)
+        stopWatch.stop()
+        println(stopWatch.prettyPrint())
+    }
+
+    private fun createThumbNail(
+        inputFilePath: Path,
+        thumbNailPath: String
+    ) {
+        logger.info("썸네일")
+        val stopWatch = StopWatch()
+        stopWatch.start("썸네일 만들고 업로드하는 데 걸린 시간")
+        //thumbnail by ffmpeg
+
+        extractThumbnail(inputFilePath.toString(), thumbNailPath)
+        //uploadThumbnail
+        uploadRepository.uploadThumbnail(thumbNailPath)
+        stopWatch.stop()
+        println(stopWatch.prettyPrint())
+    }
+
+    private fun deleteChunkFiles(
+        videoData: UploadVideoPartDTO,
+        video: MultipartFile
+    ) {
+        logger.info("DELETE")
+        val futures = (0 until videoData.totalChunk).map {
+            CompletableFuture.runAsync { uploadRepository.deletePart(video.originalFilename, it) }
+        }
+        CompletableFuture.allOf(*futures.toTypedArray()).get()
     }
 
     private fun uploadVideoTs(outputUUID: String) {
@@ -195,19 +218,26 @@ class UploadService(
             uploadRepository.uploadM3U8(m3u8Path)
             println("https://video-stream-spring.s3.ap-northeast-2.amazonaws.com/$m3u8Path")
             stopWatch.stop()
-            //logger.info{"mp4를 hls로 바꾸고 업로드하는 데 걸린 시간: " + (System.currentTimeMillis() - hlsUploadStart)}
-            videoRepository.save(
-                Video(
-                    createDate = Date.from(
-                        LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()
-                    ), id = outputUUID, title = videoData.title, thumbNailUrl = thumbNailPath
-                )
-            )
+            saveVideoData(outputUUID, videoData, thumbNailPath)
             println(stopWatch.prettyPrint())
             return ResponseEntity(outputUUID, HttpStatus.OK)
         } else {
             return ResponseEntity(HttpStatus.PARTIAL_CONTENT)
         }
+    }
+
+    private fun saveVideoData(
+        outputUUID: String,
+        videoData: UploadVideoPartDTO,
+        thumbNailPath: String
+    ) {
+        videoRepository.save(
+            Video(
+                createDate = Date.from(
+                    LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()
+                ), id = outputUUID, title = videoData.title, thumbNailUrl = thumbNailPath
+            )
+        )
     }
 
     private fun extractThumbnail(inputFilePath: String, thumbNailPath: String) {

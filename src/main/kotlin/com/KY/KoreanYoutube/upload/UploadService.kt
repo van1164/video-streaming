@@ -82,12 +82,10 @@ class UploadService(
                 val saveDataFuture = CompletableFuture.runAsync{saveVideoData(outputUUID, videoData, thumbNailPath)}
                 val mp4ToHlsFuture = CompletableFuture.runAsync{mp4ToHls(inputFilePath, m3u8Path, outputUUID)}
                 CompletableFuture.allOf(deleteChunkFuture,thumbNailFuture,saveDataFuture,mp4ToHlsFuture).get()
-                return@thenApplyAsync outputUUID
-            }
-            .thenApplyAsync {outputUUID->
                 println(stopWatch.prettyPrint())
                 return@thenApplyAsync outputUUID
             }.get()
+
     }
 
     private fun mp4ToHls(

@@ -41,7 +41,7 @@ class UploadService(
     val ffmpeg: FFmpeg,
     val ffprobe: FFprobe
 ) {
-    fun uploadVideoPartLast(video: MultipartFile, videoData: UploadVideoPartDTO): String {
+    fun uploadVideoPartLast(videoData: UploadVideoPartDTO): String {
 
         val futureList = mutableListOf<CompletableFuture<ByteArray>>()
         //여러 part를 하나의 파일로 만들기
@@ -77,7 +77,7 @@ class UploadService(
                 val outputUUID = UUID.randomUUID().toString()
                 val m3u8Path = "$outputUUID.m3u8"
                 val thumbNailPath = UUID.randomUUID().toString() + ".jpg"
-                val deleteChunkFuture = CompletableFuture.runAsync{deleteChunkFiles(videoData, video)}
+                val deleteChunkFuture = CompletableFuture.runAsync{deleteChunkFiles(videoData)}
                 val thumbNailFuture = CompletableFuture.runAsync{createThumbNail(inputFilePath, thumbNailPath)}
                 val saveDataFuture = CompletableFuture.runAsync{saveVideoData(outputUUID, videoData, thumbNailPath)}
                 val mp4ToHlsFuture = CompletableFuture.runAsync{mp4ToHls(inputFilePath, m3u8Path, outputUUID)}
@@ -127,8 +127,7 @@ class UploadService(
     }
 
     private fun deleteChunkFiles(
-        videoData: UploadVideoPartDTO,
-        video: MultipartFile
+        videoData: UploadVideoPartDTO
     ) {
         logger.info("DELETE")
         val futures = (0 until videoData.totalChunk).map {
@@ -146,8 +145,7 @@ class UploadService(
             if (tsFile.isFile) {
                 futures.add(
                     CompletableFuture.runAsync {
-                        val tsFileInputStream = File(tsPath).inputStream()
-                        uploadRepository.uploadVideoTsVer2(tsPath, tsFileInputStream)
+                        uploadRepository.uploadVideoTsVer2(tsPath, tsFile)
                         tsFile.delete()
                     }
                 )
@@ -162,8 +160,8 @@ class UploadService(
     }
 
     fun uploadVideoPart(video: MultipartFile, videoData: UploadVideoPartDTO): ResponseEntity<Any> {
-        val testPath = Paths.get("test_"+videoData.fileUUID+".part" +videoData.chunkNumber.toString())
-        Files.copy(video.inputStream,testPath)
+//        val testPath = Paths.get("test_" +videoData.chunkNumber.toString())
+//        Files.copy(video.inputStream,testPath)
         return if (uploadRepository.uploadVideoPart(video, videoData.chunkNumber,videoData.fileUUID)) { // 자기 자신에 UUID 넣어주어야함.
             ResponseEntity(HttpStatus.OK)
         } else {

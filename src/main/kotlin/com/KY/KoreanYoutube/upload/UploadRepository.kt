@@ -22,14 +22,14 @@ class UploadRepository(
             val tsPath = tsFilePath + "_" + count.toString().padStart(3, '0') + ".ts"
             val tsFile = File(tsPath)
             if (tsFile.isFile) {
-                amazonS3.putObject(
-                    PutObjectRequest(
-                        "video-stream-spring",
-                        tsPath,
-                        tsFile.inputStream(),
-                        ObjectMetadata()
-                    )
+                val request = PutObjectRequest(
+                    "video-stream-spring",
+                    tsPath,
+                    tsFile
                 )
+                request.requestClientOptions.readLimit = 3000
+
+                amazonS3.putObject(request)
                 tsFile.delete()
                 count++
             } else {
@@ -39,32 +39,39 @@ class UploadRepository(
 
     }
 
-    fun uploadVideoTsVer2(tsPath: String, tsFileInputStream: FileInputStream) {
-        amazonS3.putObject(
-            PutObjectRequest(
+    fun uploadVideoTsVer2(tsPath: String, tsFile: File) {
+        try {
+            val request = PutObjectRequest(
                 "video-stream-spring",
                 tsPath,
-                tsFileInputStream,
-                ObjectMetadata()
+                tsFile
             )
-        )
+            amazonS3.putObject(request)
+
+        }catch (e : Exception){
+            logger.error { e.toString() }
+        }
+
     }
 
     fun uploadVideoPart(video: MultipartFile, chunkNumber: Int, videoUUID: String): Boolean {
         try {
-            println("Upload : $chunkNumber")
-            amazonS3.putObject(
-                PutObjectRequest(
-                    "video-stream-spring",
-                    "$videoUUID.part$chunkNumber",
-                    video.inputStream,
-                    ObjectMetadata()
-                )
+            logger.info("Upload : $chunkNumber")
+            val request = PutObjectRequest(
+                "video-stream-spring",
+                "$videoUUID.part$chunkNumber",
+                video.inputStream,
+                ObjectMetadata().apply {
+                    contentLength = video.size
+                }
             )
+            request.requestClientOptions.readLimit = 80000000
+            amazonS3.putObject(request)
+
             return true
         } catch (e: Exception) {
-            logger.error{"업로드 실패 $chunkNumber"}
-            logger.error{e.toString() + chunkNumber}
+            logger.error { "업로드 실패 $chunkNumber" }
+            logger.error { e.toString() + chunkNumber }
             return false
         }
 
@@ -109,27 +116,24 @@ class UploadRepository(
     fun uploadM3U8(m3u8Path: String) {
         println("Upload M3U8")
         val m3u8File = File(m3u8Path)
-        amazonS3.putObject(
-            PutObjectRequest(
-                "video-stream-spring",
-                m3u8Path,
-                m3u8File.inputStream(),
-                ObjectMetadata()
-            )
+        val request = PutObjectRequest(
+            "video-stream-spring",
+            m3u8Path,
+            m3u8File,
         )
+        request.requestClientOptions.readLimit = 3000
+        amazonS3.putObject(request)
         m3u8File.delete()
     }
 
     fun uploadThumbnail(thumbNailPath: String) {
         val thumbNailFile = File(thumbNailPath)
-        amazonS3.putObject(
-            PutObjectRequest(
-                "video-stream-spring",
-                thumbNailPath,
-                thumbNailFile.inputStream(),
-                ObjectMetadata()
-            )
+        val request = PutObjectRequest(
+            "video-stream-spring",
+            thumbNailPath,
+            thumbNailFile
         )
+        amazonS3.putObject(request)
         thumbNailFile.delete()
     }
 

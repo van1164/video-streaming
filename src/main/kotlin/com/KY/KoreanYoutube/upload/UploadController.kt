@@ -25,18 +25,26 @@ class UploadController(
 
     @PostMapping("/videoPart")
     fun uploadVideoPart(@RequestPart(name = "video") video: MultipartFile,
-                    @RequestPart(name = "videoData")videoData: UploadVideoPartDTO): ResponseEntity<Any> {
+            title : String,
+            chunkNumber : Int,
+            totalChunk : Int,
+            fileUUID : String): ResponseEntity<Any> {
 
+        val videoData = UploadVideoPartDTO(title,chunkNumber,totalChunk,fileUUID)
         return uploadService.uploadVideoPart(video, videoData)
 
 
     }
     @ResponseBody
     @PostMapping("/videoPartLast")
-     fun uploadVideoLast(@RequestPart(name = "video") video: MultipartFile,
-                                @RequestPart(name = "videoData")videoData: UploadVideoPartDTO): String {
-
-        return uploadService.uploadVideoPartLast(video, videoData)
+     fun uploadVideoLast(
+        title : String,
+        chunkNumber : Int,
+        totalChunk : Int,
+        fileUUID : String
+     ): String {
+        val videoData = UploadVideoPartDTO(title,chunkNumber,totalChunk,fileUUID)
+        return uploadService.uploadVideoPartLast(videoData)
 
 
     }

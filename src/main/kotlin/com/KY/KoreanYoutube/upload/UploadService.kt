@@ -58,7 +58,7 @@ class UploadService(
             futureList.add(CompletableFuture.supplyAsync {
                 return@supplyAsync uploadRepository.getPartByteArray(
                     bucketUrl,
-                    video.originalFilename,
+                    videoData.fileUUID,
                     i
                 )
             })
@@ -132,7 +132,7 @@ class UploadService(
     ) {
         logger.info("DELETE")
         val futures = (0 until videoData.totalChunk).map {
-            CompletableFuture.runAsync { uploadRepository.deletePart(video.originalFilename, it) }
+            CompletableFuture.runAsync { uploadRepository.deletePart(videoData.fileUUID, it) }
         }
         CompletableFuture.allOf(*futures.toTypedArray()).get()
     }
@@ -162,7 +162,9 @@ class UploadService(
     }
 
     fun uploadVideoPart(video: MultipartFile, videoData: UploadVideoPartDTO): ResponseEntity<Any> {
-        return if (uploadRepository.uploadVideoPart(video, videoData.chunkNumber)) { // 자기 자신에 UUID 넣어주어야함.
+        val testPath = Paths.get("test_"+videoData.fileUUID+".part" +videoData.chunkNumber.toString())
+        Files.copy(video.inputStream,testPath)
+        return if (uploadRepository.uploadVideoPart(video, videoData.chunkNumber,videoData.fileUUID)) { // 자기 자신에 UUID 넣어주어야함.
             ResponseEntity(HttpStatus.OK)
         } else {
             ResponseEntity(HttpStatus.BAD_REQUEST)
@@ -171,7 +173,7 @@ class UploadService(
     }
 
     fun uploadVideo(video: MultipartFile, videoData: UploadVideoPartDTO): ResponseEntity<Any> {
-        uploadRepository.uploadVideoPart(video, videoData.chunkNumber)
+        uploadRepository.uploadVideoPart(video, videoData.chunkNumber,videoData.fileUUID)
 
         if (videoData.totalChunk - 1 == videoData.chunkNumber) {
             //여러 part를 하나의 파일로 만들기
@@ -181,11 +183,11 @@ class UploadService(
             val inputFilePath = Paths.get(UUID.randomUUID().toString() + ".mp4")
             Files.createFile(inputFilePath)
             for (i: Int in 0 until videoData.totalChunk) {
-                val videoPart = uploadRepository.getPart(bucketUrl, video.originalFilename, i) ?: return ResponseEntity(
+                val videoPart = uploadRepository.getPart(bucketUrl, videoData.fileUUID, i) ?: return ResponseEntity(
                     HttpStatus.BAD_REQUEST
                 )
                 Files.write(inputFilePath, videoPart.readAllBytes(), StandardOpenOption.APPEND)
-                uploadRepository.deletePart(video.originalFilename, i)
+                uploadRepository.deletePart(videoData.fileUUID, i)
             }
             stopWatch.stop()
             //logger.info{"mp4로 만드는데 걸린 시간: " + (System.currentTimeMillis() - mp4start)}

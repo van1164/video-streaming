@@ -23,6 +23,7 @@
         const totalChunks = Math.ceil(file.size / chunkSize);
         let uploadFinish = 0;
         let promises = [];
+        let fileUUID = crypto.randomUUID().toString()
         for(let currentChunk =0; currentChunk<totalChunks; currentChunk++) {
             let startPartTime = new Date();  // 시작
             // chunk size 만큼 데이터 분할
@@ -34,7 +35,7 @@
             // form data 형식으로 전송
             const formData = new FormData();
             formData.append("video", chunk);
-            const json = JSON.stringify({title: title, chunkNumber: currentChunk, totalChunk: totalChunks})
+            const json = JSON.stringify({title : title, chunkNumber : currentChunk, totalChunk : totalChunks, fileUUID : fileUUID})
             formData.append("videoData", new Blob([json], {type: "application/json"}));
             let promise = fetch("/api/v1/upload/videoPart", {
                 method: "POST",
@@ -42,10 +43,10 @@
                 headers: {}
             }).then(resp => {
                 // 진행률 표시
-                resultElement.textContent = Math.round(currentChunk / totalChunks * 100) + "%"
+                uploadFinish++;
+                resultElement.textContent = Math.round(uploadFinish / totalChunks * 100) + "%"
                 let endPart = new Date();  // 종료
                 console.log("chunk" + String(currentChunk) + ":" + String(endPart - startPartTime));
-                uploadFinish++;
 
             }).catch(err => {
                 console.error("Error uploading video chunk");
@@ -59,7 +60,7 @@
                 console.log("모든 chunk 업로드하는데 걸린시간"+ String(new Date() - startTime))
                 const formData = new FormData();
                 formData.append("video", file.slice(0,chunkSize));
-                const json = JSON.stringify({title: title, chunkNumber: totalChunks, totalChunk: totalChunks})
+                const json = JSON.stringify({title: title, chunkNumber: totalChunks, totalChunk: totalChunks,fileUUID : fileUUID})
                 formData.append("videoData", new Blob([json], {type: "application/json"}));
                 fetch("/api/v1/upload/videoPartLast", {
                     method: "POST",
@@ -105,7 +106,8 @@
             // form data 형식으로 전송
             const formData = new FormData();
             formData.append("video", chunk);
-            const json = JSON.stringify({title : title, chunkNumber : currentChunk, totalChunk : totalChunks})
+            console.log(crypto.randomUUID().toString())
+            const json = JSON.stringify({title : title, chunkNumber : currentChunk, totalChunk : totalChunks, fileUUID : crypto.randomUUID().toString()})
             formData.append("videoData", new Blob([json],{type:"application/json"}) );
 
 

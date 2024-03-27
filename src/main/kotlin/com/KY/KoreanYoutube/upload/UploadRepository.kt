@@ -7,19 +7,21 @@ import org.springframework.stereotype.Repository
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 import java.io.FileInputStream
+import kotlin.math.log
 
 private val logger = KotlinLogging.logger {} // KotlinLogging 사용
+
 @Repository
 class UploadRepository(
     val amazonS3: AmazonS3
 ) {
 
-    fun uploadVideoTs(tsFilePath: String){
+    fun uploadVideoTs(tsFilePath: String) {
         var count = 0
-        while(true){
-            val tsPath = tsFilePath + "_" + count.toString().padStart(3,'0') +".ts"
+        while (true) {
+            val tsPath = tsFilePath + "_" + count.toString().padStart(3, '0') + ".ts"
             val tsFile = File(tsPath)
-            if (tsFile.isFile){
+            if (tsFile.isFile) {
                 amazonS3.putObject(
                     PutObjectRequest(
                         "video-stream-spring",
@@ -30,15 +32,14 @@ class UploadRepository(
                 )
                 tsFile.delete()
                 count++
-            }
-            else{
+            } else {
                 break
             }
         }
 
     }
 
-    fun uploadVideoTsVer2(tsPath: String, tsFileInputStream : FileInputStream){
+    fun uploadVideoTsVer2(tsPath: String, tsFileInputStream: FileInputStream) {
         amazonS3.putObject(
             PutObjectRequest(
                 "video-stream-spring",
@@ -49,60 +50,60 @@ class UploadRepository(
         )
     }
 
-    fun uploadVideoPart(video: MultipartFile, chunkNumber: Int): Boolean {
+    fun uploadVideoPart(video: MultipartFile, chunkNumber: Int, videoUUID: String): Boolean {
         try {
             println("Upload : $chunkNumber")
             amazonS3.putObject(
                 PutObjectRequest(
                     "video-stream-spring",
-                    video.originalFilename + ".part" + chunkNumber,
+                    "$videoUUID.part$chunkNumber",
                     video.inputStream,
                     ObjectMetadata()
                 )
             )
             return true
-        } catch (e : Exception){
+        } catch (e: Exception) {
+            logger.error{"업로드 실패 $chunkNumber"}
+            logger.error{e.toString() + chunkNumber}
             return false
         }
 
     }
 
-    fun getPart(bucketUrl: String, originalFilename: String?, i: Int): S3ObjectInputStream? {
+    fun getPart(bucketUrl: String, videoUUID: String?, i: Int): S3ObjectInputStream? {
         logger.info("getPart : $i")
         return try {
             amazonS3.getObject(
                 "video-stream-spring",
-                "$originalFilename.part$i"
-            ).use{
+                "$videoUUID.part$i"
+            ).use {
                 return it.objectContent
             }
 
-        }
-        catch (e: AmazonS3Exception){
+        } catch (e: AmazonS3Exception) {
             null
         }
     }
 
-    fun getPartByteArray(bucketUrl: String, originalFilename: String?, i: Int): ByteArray? {
+    fun getPartByteArray(bucketUrl: String, videoUUID: String, i: Int): ByteArray? {
         logger.info("getPart : $i")
         return try {
             amazonS3.getObject(
                 "video-stream-spring",
-                "$originalFilename.part$i"
-            ).use{
+                "$videoUUID.part$i"
+            ).use {
                 return it.objectContent.readAllBytes()
             }
 
-        }
-        catch (e: AmazonS3Exception){
+        } catch (e: AmazonS3Exception) {
             null
         }
     }
 
 
-    fun deletePart(originalFilename: String?, i: Int){
+    fun deletePart(videoUUID: String, i: Int) {
         logger.info("deletePart : $i")
-        amazonS3.deleteObject("video-stream-spring","$originalFilename.part$i" )
+        amazonS3.deleteObject("video-stream-spring", "$videoUUID.part$i")
     }
 
     fun uploadM3U8(m3u8Path: String) {

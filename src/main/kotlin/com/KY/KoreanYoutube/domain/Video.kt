@@ -18,5 +18,5 @@ data class Video(
     var id : String,
 
     @Column(name = "thumbnail_url")
-    var thumbNailUrl : String,
+    var thumbNailUrl : String?,
 )

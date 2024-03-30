@@ -35,8 +35,12 @@
             // form data 형식으로 전송
             const formData = new FormData();
             formData.append("video", chunk);
-            const json = JSON.stringify({title : title, chunkNumber : currentChunk, totalChunk : totalChunks, fileUUID : fileUUID})
-            formData.append("videoData", new Blob([json], {type: "application/json"}));
+            //const json = JSON.stringify({title : title, chunkNumber : currentChunk, totalChunk : totalChunks, fileUUID : fileUUID})
+            formData.append("title",title)
+            formData.append("chunkNumber",currentChunk.toString())
+            formData.append("totalChunk",totalChunks.toString())
+            formData.append("fileUUID",fileUUID)
+            //formData.append("videoData", new Blob([json], {type: "application/json"}));
             let promise = fetch("/api/v1/upload/videoPart", {
                 method: "POST",
                 body: formData,
@@ -57,27 +61,46 @@
 
         Promise.all(promises).then(
             () => {
-                console.log("모든 chunk 업로드하는데 걸린시간"+ String(new Date() - startTime))
-                const formData = new FormData();
-                formData.append("video", file.slice(0,chunkSize));
-                const json = JSON.stringify({title: title, chunkNumber: totalChunks, totalChunk: totalChunks,fileUUID : fileUUID})
-                formData.append("videoData", new Blob([json], {type: "application/json"}));
-                fetch("/api/v1/upload/videoPartLast", {
-                    method: "POST",
-                    body: formData,
-                    headers: {}
-                }).then(resp => {
-                    resp.text().then(data => {
-                        console.log("최종 걸린시간: " + String(new Date() - startTime));
-                        resultElement.textContent = "동영상 보러가기"
-                        resultElement.href = "http://localhost:8080/detail/" + data
-                    });
+                console.log("모든 chunk 업로드하는데 걸린시간" + String(new Date() - startTime))
+                const eventSource = new EventSource("http://localhost:8080/api/v1/upload/videoPartLast/"+fileUUID +"/"+totalChunks.toString())
 
-                }).catch(err => {
+                eventSource.addEventListener("ing", (event) => {
+                    console.log(event.data)
+                    resultElement.textContent = event.data
+                })
+
+                eventSource.addEventListener("finish", (event) => {
+                    console.log(event.data)
+                    resultElement.textContent = "동영상 보러가기"
+                    resultElement.href = "http://localhost:8080/detail/" + event.data
+                    console.log("최종 걸린시간: " + String(new Date() - startTime));
+                    eventSource.close()
+                })
+
+
+                // const formData = new FormData();
+                // formData.append("video", file.slice(0,chunkSize));
+                // //const json = JSON.stringify({title: title, chunkNumber: totalChunks, totalChunk: totalChunks,fileUUID : fileUUID})
+                // //formData.append("videoData", new Blob([json], {type: "application/json"}));
+                // formData.append("title",title)
+                // formData.append("chunkNumber",totalChunks.toString())
+                // formData.append("totalChunk",totalChunks.toString())
+                // formData.append("fileUUID",fileUUID)
+                // fetch("/api/v1/upload/videoPartLast", {
+                //     method: "POST",
+                //     body: formData,
+                //     headers: {}
+                // }).then(resp => {
+                //     resp.text().then(data => {
+                //         console.log("최종 걸린시간: " + String(new Date() - startTime));
+                //         resultElement.textContent = "동영상 보러가기"
+                //         resultElement.href = "http://localhost:8080/detail/" + data
+                //     });
+                //
+            }).catch(err => {
                     console.error("Error uploading video chunk");
                 });
-            }
-        )
+
 
 
     }

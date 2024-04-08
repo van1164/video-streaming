@@ -43,3 +43,8 @@
 ![](https://velog.velcdn.com/images/van1164/post/f9ca7507-aba9-436d-bb50-a0cda9332657/image.png)
 
 ### ✅ 같은 용량의 파일을 업로드하는 데 13초정도의 시간 절약을 할 수있었다!!
+
+
+### 디비 설계
+
+![image](https://github.com/van1164/video-streaming/assets/52437971/8f303e85-175f-47c0-8e7e-f415199b8499)

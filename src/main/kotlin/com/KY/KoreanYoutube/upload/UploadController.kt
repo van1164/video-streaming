@@ -1,6 +1,7 @@
 package com.KY.KoreanYoutube.upload
 
-import com.KY.KoreanYoutube.upload.dto.UploadVideoPartDTO
+import com.KY.KoreanYoutube.dto.UploadVideoPartDTO
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import java.util.concurrent.CompletableFuture
+import java.util.*
 
 
 @Controller
@@ -21,7 +22,8 @@ class UploadController(
 
     @PostMapping("/video")
     fun uploadVideo(@RequestPart(name = "video") video: MultipartFile,
-                    @RequestPart(name = "videoData")videoData: UploadVideoPartDTO): ResponseEntity<Any> {
+                    @RequestPart(name = "videoData")videoData: UploadVideoPartDTO
+    ): ResponseEntity<Any> {
 
         return uploadService.uploadVideo(video, videoData)
 
@@ -47,9 +49,9 @@ class UploadController(
         @PathVariable totalChunk: Int,
      ): Flux<ServerSentEvent<String>> {
         return uploadService.uploadVideoPartLast(id,totalChunk)
-
-
     }
+
+
 
     @PostMapping("/saveVideoData")
     fun saveVideoData(

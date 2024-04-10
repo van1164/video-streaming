@@ -76,30 +76,6 @@
                     console.log("최종 걸린시간: " + String(new Date() - startTime));
                     eventSource.close()
                 })
-
-
-                const formData = new FormData();
-                formData.append("video", file.slice(0, chunkSize));
-                //const json = JSON.stringify({title: title, chunkNumber: totalChunks, totalChunk: totalChunks,fileUUID : fileUUID})
-                //formData.append("videoData", new Blob([json], {type: "application/json"}));
-                formData.append("title", title)
-                formData.append("chunkNumber", totalChunks.toString())
-                formData.append("totalChunk", totalChunks.toString())
-                formData.append("fileUUID", fileUUID)
-                fetch("/api/v1/upload/videoPartLast", {
-                    method: "POST",
-                    body: formData,
-                    headers: {}
-                }).then(resp => {
-                    resp.text().then(data => {
-                        console.log("최종 걸린시간: " + String(new Date() - startTime));
-                        resultElement.textContent = "동영상 보러가기"
-                        resultElement.href = "http://localhost:8080/detail/" + data
-
-                    }).catch(err => {
-                        console.error("Error uploading video chunk");
-                    });
-                })
             })
 
     }

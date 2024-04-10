@@ -1,7 +1,7 @@
 package com.KY.KoreanYoutube.upload
 
 import com.KY.KoreanYoutube.domain.Video
-import com.KY.KoreanYoutube.upload.dto.UploadVideoPartDTO
+import com.KY.KoreanYoutube.dto.UploadVideoPartDTO
 import com.KY.KoreanYoutube.video.VideoRepository
 import kotlinx.coroutines.*
 import mu.KotlinLogging
@@ -40,12 +40,12 @@ data class Event(
 
 @Service
 class UploadService(
-    val uploadRepository: UploadRepository,
-    val videoRepository: VideoRepository,
+    private val uploadRepository: UploadRepository,
+    private val videoRepository: VideoRepository,
     @Value("\${aws.s3.bucketUrl}")
-    val bucketUrl: String,
-    val ffmpeg: FFmpeg,
-    val ffprobe: FFprobe
+    private val bucketUrl: String,
+    private val ffmpeg: FFmpeg,
+    private val ffprobe: FFprobe
 ) {
 
     val sink = Sinks.many().multicast().onBackpressureBuffer<Event>()
@@ -53,7 +53,6 @@ class UploadService(
         //여러 part를 하나의 파일로 만들기
         val stopWatch = StopWatch()
         stopWatch.start("mp4로 만드는데 걸린 시간")
-        //val mp4start = System.currentTimeMillis()
         val inputFilePath = Paths.get(UUID.randomUUID().toString() + ".mp4")
         runBlocking {
             Files.createFile(inputFilePath)
@@ -120,39 +119,6 @@ class UploadService(
                 .build()
         }
 
-//        val futureList = mutableListOf<CompletableFuture<ByteArray>>()
-
-
-//        for (i: Int in 0 until videoData.totalChunk) {
-//            futureList.add(CompletableFuture.supplyAsync {
-//                return@supplyAsync uploadRepository.getPartByteArray(
-//                    bucketUrl,
-//                    videoData.fileUUID,
-//                    i
-//                )
-//            })
-//        }
-//
-//
-//        return CompletableFuture.allOf(*futureList.toTypedArray())
-//            .thenApply {
-//                // ts -> mp4
-//                futureList.forEach{videoPart ->
-//                    Files.write(inputFilePath, videoPart.get(), StandardOpenOption.APPEND)
-//                }
-//                stopWatch.stop()
-//            }.thenApplyAsync {
-//                val outputUUID = UUID.randomUUID().toString()
-//                val m3u8Path = "$outputUUID.m3u8"
-//                val thumbNailPath = UUID.randomUUID().toString() + ".jpg"
-//                val deleteChunkFuture = CompletableFuture.runAsync{deleteChunkFiles(videoData)}
-//                val thumbNailFuture = CompletableFuture.runAsync{createThumbNail(inputFilePath, thumbNailPath)}
-//                val saveDataFuture = CompletableFuture.runAsync{saveVideoData(outputUUID, videoData, thumbNailPath)}
-//                val mp4ToHlsFuture = CompletableFuture.runAsync{mp4ToHls(inputFilePath, m3u8Path, outputUUID)}
-//                CompletableFuture.allOf(deleteChunkFuture,thumbNailFuture,saveDataFuture,mp4ToHlsFuture).get()
-//                println(stopWatch.prettyPrint())
-//                return@thenApplyAsync outputUUID
-//            }.get()
 
     }
 
@@ -361,6 +327,10 @@ class UploadService(
             .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL).done()
         FFmpegExecutor(ffmpeg, ffprobe).createJob(builder).run()
         File(inputFilePath.toString()).delete()
+    }
+
+    fun uploadM3U8(m3u8: MultipartFile) {
+        uploadRepository.uploadM3U8(m3u8)
     }
 
 

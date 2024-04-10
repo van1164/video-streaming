@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang = "ko">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스트리밍 시작</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.11.5/video-js.min.css"
+          integrity="sha512-7ygWwJCkEsI7sNqXtHyZv+W9eCZwAgNcYwaV7tdLvWtDxTmASJLyigHOhufdziF812S99GnAM8JuDIc2+Ppkiw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
+    <style>
+        video {
+            max-width: 500px;
+            width: 100%;
+            max-height: 500px;
+            height: 100%;
+            object-fit: fill;
+        }
+    </style>
+
+</head>
+
+<body>
+<div>
+<input hidden="hidden" type="text" name="userId" value=1 id="userId">
+<div>제목 : <br/><input type="text" name="title" value="" id="title"></div>
+<div>설명: <br/><input type="text" name="description" value="" id="description"></div>
+<button onclick="streamStart()">스트리밍 시작</button>
+</div>
+<div>
+스트리밍 주소 : <h3 id="rtmp"></h3>
+스트리밍 키 : <h3 id="key"></h3>
+공개되지 않게 조심.
+이 주소는 10분간만 유지됩니다.
+</div>
+<h3>연결되면 나옵니다.</h3>
+<video id="video" controls playsinline autoplay></video>
+
+<script>
+    streamStart = () => {
+        var title = document.getElementById("title").value;
+        var description = document.getElementById("description").value;
+        var userId = document.getElementById("userId").value
+
+        if (title.trim() === "" || description.trim() === "") {
+            alert("비우지 마세요");
+            return false;
+        }
+        const formData = new FormData();
+        formData.append("title",title)
+        formData.append("description",description)
+        formData.append("userId",userId)
+        fetch("/api/v1/stream/save_stream", {
+            method: "POST",
+            body: formData,
+            headers: {}
+        }).then(resp => {
+            // 진행률 표시
+            console.log(resp.body)
+            resp.text().then(data => {
+                    console.log(data)
+                    const rtmpElement = document.getElementById("rtmp");
+                    const keyElement = document.getElementById("key");
+                    rtmpElement.textContent = "rtmp://localhost:1935/live"
+                    keyElement.textContent = data
+                    const eventSource = new EventSource("http://localhost:8080/api/v1/stream/start_stream/" + data)
+                    eventSource.addEventListener("finish", (event) => {
+                        console.log(event.data)
+                        videoSrc = "http://localhost:8080/api/v1/stream/live/"+data
+                        initHls()
+                        initVideo()
+                        eventSource.close()
+                    })
+                }
+            )
+
+        }).catch(err => {
+            console.error("Error uploading video chunk");
+        });
+
+    }
+
+
+    /* video Element */
+    let video = null;
+    /* 샘플 m3u8 url */
+    let videoSrc = "http://localhost:8080/hls/test.m3u8"//'[[${m3u8Url}]]';
+
+    /* initVideo */
+    const initVideo = () => {
+        video = document.querySelector('#video')
+    }
+
+    /* initHls : hls를 초기화 하는 함수 */
+    const initHls = () => {
+        if (Hls.isSupported()) {
+            hls = new Hls({
+                autoStartLoad: false,
+            });
+            hls.loadSource(videoSrc);
+            hls.attachMedia(video);
+            hls.startLoad();
+        }
+        /* ios/safari 같은 경우에 hls가 built-in 되어있다.*/
+        else {
+            video.src = videoSrc;
+        }
+    }
+
+    /* DOMContentLoaded 로드를 통해 video Element 담기*/
+    window.addEventListener("DOMContentLoaded", () => {
+        initVideo();
+        initHls();
+    })
+
+</script>
+
+</body>
+
+</html>

@@ -137,4 +137,24 @@ class UploadRepository(
         thumbNailFile.delete()
     }
 
+    fun uploadM3U8(m3u8: MultipartFile) {
+        try {
+            logger.info("Upload : stream-m3u8")
+            val request = PutObjectRequest(
+                "video-stream-spring",
+                "${m3u8.originalFilename}",
+                m3u8.inputStream,
+                ObjectMetadata().apply {
+                    contentLength = m3u8.size
+                }
+            )
+            request.requestClientOptions.readLimit = 80000000
+            amazonS3.putObject(request)
+        } catch (e: Exception) {
+            logger.error { "업로드 실패 m3u8" }
+            logger.error { e.toString() }
+        }
+
+    }
+
 }

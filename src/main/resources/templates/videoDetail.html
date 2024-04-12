@@ -22,6 +22,9 @@
         }
     </style>
 
+    <script>
+        let jwt = localStorage.getItem("jwt")
+    </script>
 </head>
 
 <body>
@@ -31,7 +34,7 @@
     /* video Element */
     let video = null;
     /* 샘플 m3u8 url */
-    let videoSrc = [[${m3u8Url}]];
+    let videoSrc = "[[${m3u8Url}]]"
 
     /* initVideo */
     const initVideo = () => {

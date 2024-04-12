@@ -46,7 +46,7 @@ class StreamService(
     @Transactional
     fun saveStream(streamDTO: StreamDTO): ResponseEntity<Any> {
         try {
-            val user = checkNotNull(userRepository.findByIdOrNull(streamDTO.userId))
+            val user = checkNotNull(userRepository.findByIdOrNull(streamDTO.userName))
             if (user.onAir) {
                 throw IllegalStateException()
             }

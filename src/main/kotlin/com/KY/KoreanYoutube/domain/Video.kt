@@ -19,8 +19,12 @@ data class Video(
     @Column(name = "video_id")
     var id : String,
 
+    @Column(name = "user_id")
+    val userName : String,
+
     @Column(name = "thumbnail_url")
     var thumbNailUrl : String?,
+
 
 
     @Column(name = "comments")

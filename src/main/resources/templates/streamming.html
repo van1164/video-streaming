@@ -21,7 +21,9 @@
             object-fit: fill;
         }
     </style>
-
+    <script>
+        let jwt = localStorage.getItem("jwt")
+    </script>
 </head>
 
 <body>
@@ -57,7 +59,7 @@
         fetch("/api/v1/stream/save_stream", {
             method: "POST",
             body: formData,
-            headers: {}
+            headers: {"Authorization": "Bearer "+jwt}
         }).then(resp => {
             // 진행률 표시
             console.log(resp.body)

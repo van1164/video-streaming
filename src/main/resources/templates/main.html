@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <title>main</title>
 </head>
+
+<script>
+    let jwt = [[${jwt}]]
+    localStorage.setItem("jwt",jwt.toString())
+</script>
 <body>
 <div><p style="align-content: center; text-align: center; ">비디오 스트리밍</p></div>
 <a href="api/v1/upload/uploadPage">업로드</a>
-<a href="/oauth2/authorization/google">로그인</a>
+<a href="/oauth2/authorization/google">구글 로그인</a>
 
 <div th:each="video : ${data.videoList}">
     <span>
+        <img th:src="${video.thumbNailUrl}">
         <a th:href="${'detail/'+ video.id}"  th:text="${video.title}"></a>
     </span>
 

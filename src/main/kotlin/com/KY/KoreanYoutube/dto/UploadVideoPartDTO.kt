@@ -1,4 +1,4 @@
-package com.KY.KoreanYoutube.upload.dto
+package com.KY.KoreanYoutube.dto
 
 data class UploadVideoPartDTO(
     val title : String,

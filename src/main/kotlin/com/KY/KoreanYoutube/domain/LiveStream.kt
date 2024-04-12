@@ -16,8 +16,8 @@ data class LiveStream(
     @Column(name = "description")
     var description : String,
 
-    @Column(name = "user_id")
-    val userId : Long,
+    @Column(name = "user_name")
+    val userName : String,
 
     @Column(name = "stream_key")
     val streamKey : String,
@@ -42,5 +42,5 @@ data class LiveStream(
     var bad : Int = 0,
 
     ){
-    constructor(streamDTO: StreamDTO, streamKey:String):this(streamDTO.title,streamDTO.description,streamDTO.userId,streamKey)
+    constructor(streamDTO: StreamDTO, streamKey:String):this(streamDTO.title,streamDTO.description,streamDTO.userName,streamKey)
 }

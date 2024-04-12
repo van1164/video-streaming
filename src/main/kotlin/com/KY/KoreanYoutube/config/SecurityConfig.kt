@@ -1,5 +1,6 @@
 package com.KY.KoreanYoutube.config
 
+import com.KY.KoreanYoutube.security.JwtAuthenticationFilter
 import com.KY.KoreanYoutube.security.OAuthSuccessHandler
 import com.KY.KoreanYoutube.security.PrincipalOauthUserService
 import mu.KotlinLogging
@@ -11,6 +12,7 @@ import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository
 
 
@@ -20,7 +22,8 @@ val log = KotlinLogging.logger{}
 @Configuration
 class SecurityConfig(
     val principalOauthUserService: PrincipalOauthUserService,
-    val oAuthSuccessHandler: OAuthSuccessHandler
+    val oAuthSuccessHandler: OAuthSuccessHandler,
+    val jwtAuthenticationFilter: JwtAuthenticationFilter
 ) {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
@@ -29,6 +32,7 @@ class SecurityConfig(
             csrf { disable() }
             cors { }
             authorizeRequests {
+                authorize("/api/v1/upload/**",authenticated)
                 authorize("/**",permitAll)
             }
             oauth2Login {
@@ -43,6 +47,7 @@ class SecurityConfig(
             exceptionHandling {
                 //authenticationEntryPoint = serverAuthenticationEntryPoint()
             }
+            addFilterBefore<UsernamePasswordAuthenticationFilter>(jwtAuthenticationFilter)
 
 
         }

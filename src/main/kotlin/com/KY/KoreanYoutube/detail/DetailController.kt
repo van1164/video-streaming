@@ -12,7 +12,7 @@ class DetailController {
 
     @GetMapping("detail/{detail_id}")
     fun loadDetailPage(model:Model, @PathVariable(name = "detail_id") detailId : String): String {
-        model.addAttribute("m3u8Url" , "https://video-stream-spring.s3.ap-northeast-2.amazonaws.com/$detailId.m3u8")
+        model.addAttribute("m3u8Url" , "https://video-stream-spring.s3.ap-northeast-2.amazonaws.com/$detailId/$detailId.m3u8")
         return "videoDetail"
     }
 }

@@ -25,7 +25,7 @@ class JwtTokenProvider(
     var secretKey: String
 ) {
 
-    val EXPIRATION_MILLISECONDS: Long = 1000 * 60 * 30
+    val EXPIRATION_MILLISECONDS: Long = 10000 * 60 * 30
     private val key by lazy { Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)) }
 
 

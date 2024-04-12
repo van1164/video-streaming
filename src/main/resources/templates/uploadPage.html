@@ -8,11 +8,12 @@
 
 <input id="video-file" type="file" name="file">
 <label for="title">제목</label><input id="title" type="text" name="title">
-<button onclick="sendVideoChunks()">업로드</button>
+<button onclick="return sendVideoChunks()">업로드</button>
 <a id="result"></a>
 
 </body>
 <script>
+    let jwt = localStorage.getItem("jwt")
     const sendVideoChunks = () => {
         let startTime = new Date();  // 시작
         const chunkSize = 1024 * 1024 * 3; // 1MB
@@ -44,7 +45,7 @@
             let promise = fetch("/api/v1/upload/videoPart", {
                 method: "POST",
                 body: formData,
-                headers: {}
+                headers: {"Authorization": "Bearer "+jwt}
             }).then(resp => {
                 // 진행률 표시
                 uploadFinish++;
@@ -58,6 +59,22 @@
 
             promises.push(promise)
         }
+
+        promises.push(
+            fetch("/api/v1/upload/saveVideoData", {
+                method: "POST",
+                body: JSON.stringify({'title':title.toString(),'fileUUID':fileUUID}),
+                headers: {'Authorization': 'Bearer '+jwt, "Content-Type": "application/json"}
+            }).then(resp => {
+                if(resp.status!==200){
+                    alert("업로드 중 오류 발생")
+                    return ;
+                }
+            }).catch(err => {
+                console.error("Error uploading video chunk");
+            })
+        )
+
 
         Promise.all(promises).then(
             () => {

@@ -3,6 +3,7 @@ package com.KY.KoreanYoutube.upload
 import com.KY.KoreanYoutube.domain.Video
 import com.KY.KoreanYoutube.dto.UploadVideoPartDTO
 import com.KY.KoreanYoutube.video.VideoRepository
+import jakarta.transaction.Transactional
 import kotlinx.coroutines.*
 import mu.KotlinLogging
 import net.bramp.ffmpeg.FFmpeg
@@ -38,6 +39,7 @@ data class Event(
     val message : String
 )
 
+val s3URL = "https://video-stream-spring.s3.ap-northeast-2.amazonaws.com/"
 @Service
 class UploadService(
     private val uploadRepository: UploadRepository,
@@ -49,6 +51,7 @@ class UploadService(
 ) {
 
     val sink = Sinks.many().multicast().onBackpressureBuffer<Event>()
+    @Transactional
     fun uploadVideoPartLast(fileUUID : String, totalChunk : Int): Flux<ServerSentEvent<String>> {
         //여러 part를 하나의 파일로 만들기
         val stopWatch = StopWatch()
@@ -98,17 +101,20 @@ class UploadService(
             }
                 .subscribeOn(Schedulers.boundedElastic())
 
-        val thumbNailFlux = Mono.zip(Mono.just(inputFilePath),Mono.just(thumbNailPath))
+        val thumbNailFlux = Mono.zip(Mono.just(inputFilePath),Mono.just(thumbNailPath), Mono.just(fileUUID))
             .flatMap{
-                Mono.just(createThumbNail(it.t1,it.t2)).subscribeOn(Schedulers.parallel())
+                Mono.just(it).doOnNext {
+                    createThumbNail(it.t1,it.t2)
+                }
+                    .doOnNext { saveThumbnailData(it.t3,it.t2) }.subscribeOn(Schedulers.parallel())
             }
-        val saveVideoFlux = Mono.zip(Mono.just(fileUUID),Mono.just(thumbNailPath))
-            .flatMap { Mono.just(saveThumbnailData(it.t1,it.t2)).subscribeOn(Schedulers.parallel()) }
+//        val saveVideoFlux = Mono.zip(Mono.just(fileUUID),Mono.just(thumbNailPath))
+//            .flatMap { Mono.just(saveThumbnailData(it.t1,it.t2)).subscribeOn(Schedulers.parallel()) }
 
         val mp4ToHlsFlux = Mono.zip(Mono.just(inputFilePath),Mono.just(m3u8Path),Mono.just(fileUUID))
             .flatMap{ Mono.just(mp4ToHls(it.t1,it.t2,it.t3)).subscribeOn(Schedulers.parallel())}.doFirst { sink.tryEmitNext(Event("ing","파일 변환 처리중...")) }
 
-        Flux.concat(videoFlux,Flux.merge(deleteChunkFileFlux,thumbNailFlux,saveVideoFlux,mp4ToHlsFlux))
+        Flux.concat(videoFlux,Flux.merge(deleteChunkFileFlux,thumbNailFlux,mp4ToHlsFlux))
             .doOnComplete {
                 sink.tryEmitNext(Event("finish",fileUUID))
             }
@@ -139,12 +145,12 @@ class UploadService(
         // 여러 TS들을 S3에 업로드
         uploadVideoTs(outputUUID)
 
-        uploadRepository.uploadM3U8(m3u8Path)
+        uploadRepository.uploadM3U8(m3u8Path, outputUUID)
         stopWatch.stop()
         println(stopWatch.prettyPrint())
     }
 
-    private fun createThumbNail(
+    fun createThumbNail(
         inputFilePath: Path,
         thumbNailPath: String
     ) {
@@ -160,21 +166,12 @@ class UploadService(
         println(stopWatch.prettyPrint())
     }
 
-    private fun saveThumbnailData(fileUUID : String,thumbNailUrl : String){
+
+    fun saveThumbnailData(fileUUID : String,thumbNailUrl : String){
         val video = videoRepository.findById(fileUUID).getOrNull()
         if(video != null){
             video.thumbNailUrl =thumbNailUrl
         }
-    }
-
-    private fun deleteChunkFiles(
-        videoData: UploadVideoPartDTO
-    ) {
-        logger.info("DELETE")
-        val futures = (0 until videoData.totalChunk).map {
-            CompletableFuture.runAsync { uploadRepository.deletePart(videoData.fileUUID, it) }
-        }
-        CompletableFuture.allOf(*futures.toTypedArray()).get()
     }
 
     private fun uploadVideoTs(outputUUID: String) {
@@ -186,7 +183,7 @@ class UploadService(
             if (tsFile.isFile) {
                 futures.add(
                     CompletableFuture.runAsync {
-                        uploadRepository.uploadVideoTsVer2(tsPath, tsFile)
+                        uploadRepository.uploadVideoTsVer2("$outputUUID/$tsPath", tsFile)
                         tsFile.delete()
                     }
                 )
@@ -215,70 +212,17 @@ class UploadService(
         }.subscribeOn(Schedulers.boundedElastic())
 
     }
-
-    fun uploadVideo(video: MultipartFile, videoData: UploadVideoPartDTO): ResponseEntity<Any> {
-        uploadRepository.uploadVideoPart(video, videoData.chunkNumber,videoData.fileUUID)
-
-        if (videoData.totalChunk - 1 == videoData.chunkNumber) {
-            //여러 part를 하나의 파일로 만들기
-            val stopWatch = StopWatch()
-            stopWatch.start("mp4로 만드는데 걸린 시간")
-            //val mp4start = System.currentTimeMillis()
-            val inputFilePath = Paths.get(UUID.randomUUID().toString() + ".mp4")
-            Files.createFile(inputFilePath)
-            for (i: Int in 0 until videoData.totalChunk) {
-                val videoPart = uploadRepository.getPart(bucketUrl, videoData.fileUUID, i) ?: return ResponseEntity(
-                    HttpStatus.BAD_REQUEST
-                )
-                Files.write(inputFilePath, videoPart.readAllBytes(), StandardOpenOption.APPEND)
-                uploadRepository.deletePart(videoData.fileUUID, i)
-            }
-            stopWatch.stop()
-            //logger.info{"mp4로 만드는데 걸린 시간: " + (System.currentTimeMillis() - mp4start)}
-
-            //m3u8과 ts들로 변경해야함
-            val outputUUID = UUID.randomUUID().toString()
-            val m3u8Path = "$outputUUID.m3u8"
-            println(inputFilePath.toString())
-
-            stopWatch.start("썸네일 만들고 업로드하는 데 걸린 시간")
-            //val thumbNailstart = System.currentTimeMillis()
-            //thumbnail by ffmpeg
-            val thumbNailPath = UUID.randomUUID().toString() + ".jpg"
-            extractThumbnail(inputFilePath.toString(), thumbNailPath)
-            //uploadThumbnail
-            uploadRepository.uploadThumbnail(thumbNailPath)
-            stopWatch.stop()
-            //logger.info{"썸네일 만들고 업로드하는 데 걸린 시간: " + (System.currentTimeMillis() - thumbNailstart)}
-
-            stopWatch.start("mp4를 hls로 바꾸고 업로드하는 데 걸린 시간")
-            //val hlsUploadStart = System.currentTimeMillis()
-            //mp4 to ts
-            mp4ToM3U8(inputFilePath, m3u8Path, outputUUID)
-
-
-            // 여러 TS들을 S3에 업로드
-            uploadRepository.uploadVideoTs(outputUUID)
-            uploadRepository.uploadM3U8(m3u8Path)
-            println("https://video-stream-spring.s3.ap-northeast-2.amazonaws.com/$m3u8Path")
-            stopWatch.stop()
-            //saveVideoData(videoData, thumbNailPath)
-            println(stopWatch.prettyPrint())
-            return ResponseEntity(outputUUID, HttpStatus.OK)
-        } else {
-            return ResponseEntity(HttpStatus.PARTIAL_CONTENT)
-        }
-    }
-
+    @Transactional
     fun saveVideoData(
+        title: String,
         fileUUID: String,
-        title : String
+        userName: String
     ) {
         videoRepository.save(
             Video(
                 createDate = Date.from(
                     LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()
-                ), id = fileUUID, title = title, thumbNailUrl = null
+                ), id = fileUUID, title = title, userName = userName,thumbNailUrl = null
             )
         )
     }
@@ -297,20 +241,7 @@ class UploadService(
 
     }
 
-//    private fun divideTsFile(tsFilePath: String) {
-//        val segmentBuilder =
-//            FFmpegBuilder().setInput(tsFilePath)
-//                .addOutput("${tsFilePath}_%03d.ts")
-//                .addExtraArgs("-c", "copy")
-//                .addExtraArgs("-map", "0")
-//                .addExtraArgs("-segment_time", "5")
-//                .addExtraArgs("-f", "segment")
-//                .addExtraArgs("-reset_timestamps", "1")
-//                .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL)
-//                .done()
-//        FFmpegExecutor(ffmpeg, ffprobe).createJob(segmentBuilder).run()
-//        File(tsFilePath).delete()
-//    }
+
 
     private fun mp4ToM3U8(inputFilePath: Path, m3u8Path: String, tsFilePath: String) {
         val builder = FFmpegBuilder()
@@ -322,7 +253,7 @@ class UploadService(
             .addExtraArgs("-start_number", "0")
             .addExtraArgs("-hls_time", "5")
             .addExtraArgs("-hls_list_size", "0")
-            .addExtraArgs("-hls_base_url", "https://video-stream-spring.s3.ap-northeast-2.amazonaws.com/")
+            .addExtraArgs("-hls_base_url", "https://video-stream-spring.s3.ap-northeast-2.amazonaws.com/$tsFilePath/")
             .addExtraArgs("-f", "hls")
             .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL).done()
         FFmpegExecutor(ffmpeg, ffprobe).createJob(builder).run()

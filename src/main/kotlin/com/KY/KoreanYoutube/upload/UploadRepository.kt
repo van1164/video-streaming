@@ -16,28 +16,7 @@ class UploadRepository(
     val amazonS3: AmazonS3
 ) {
 
-    fun uploadVideoTs(tsFilePath: String) {
-        var count = 0
-        while (true) {
-            val tsPath = tsFilePath + "_" + count.toString().padStart(3, '0') + ".ts"
-            val tsFile = File(tsPath)
-            if (tsFile.isFile) {
-                val request = PutObjectRequest(
-                    "video-stream-spring",
-                    tsPath,
-                    tsFile
-                )
-                request.requestClientOptions.readLimit = 3000
 
-                amazonS3.putObject(request)
-                tsFile.delete()
-                count++
-            } else {
-                break
-            }
-        }
-
-    }
 
     fun uploadVideoTsVer2(tsPath: String, tsFile: File) {
         try {
@@ -77,20 +56,6 @@ class UploadRepository(
 
     }
 
-    fun getPart(bucketUrl: String, videoUUID: String?, i: Int): S3ObjectInputStream? {
-        logger.info("getPart : $i")
-        return try {
-            amazonS3.getObject(
-                "video-stream-spring",
-                "$videoUUID.part$i"
-            ).use {
-                return it.objectContent
-            }
-
-        } catch (e: AmazonS3Exception) {
-            null
-        }
-    }
 
     fun getPartByteArray(bucketUrl: String, videoUUID: String, i: Int): ByteArray? {
         logger.info("getPart : $i")
@@ -113,12 +78,12 @@ class UploadRepository(
         amazonS3.deleteObject("video-stream-spring", "$videoUUID.part$i")
     }
 
-    fun uploadM3U8(m3u8Path: String) {
+    fun uploadM3U8(m3u8Path: String, outputUUID: String) {
         println("Upload M3U8")
         val m3u8File = File(m3u8Path)
         val request = PutObjectRequest(
             "video-stream-spring",
-            m3u8Path,
+            "$outputUUID/$m3u8Path",
             m3u8File,
         )
         request.requestClientOptions.readLimit = 3000

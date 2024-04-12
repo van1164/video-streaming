@@ -3,7 +3,7 @@ package com.KY.KoreanYoutube.stream
 import com.KY.KoreanYoutube.domain.LiveStream
 import com.KY.KoreanYoutube.dto.StreamDTO
 import com.KY.KoreanYoutube.upload.Event
-import com.KY.KoreanYoutube.user.userRepository
+import com.KY.KoreanYoutube.user.UserRepository
 import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import net.bramp.ffmpeg.FFmpeg
@@ -11,16 +11,13 @@ import net.bramp.ffmpeg.FFmpegExecutor
 import net.bramp.ffmpeg.FFprobe
 import net.bramp.ffmpeg.builder.FFmpegBuilder
 import net.bramp.ffmpeg.job.FFmpegJob
-import net.bramp.ffmpeg.progress.ProgressListener
 import org.springframework.core.io.FileSystemResource
-import org.springframework.core.io.UrlResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus.*
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
 import org.springframework.stereotype.Service
-import reactor.core.Disposable
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Sinks
@@ -33,12 +30,11 @@ import java.time.Duration
 import java.util.*
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
-import kotlin.io.path.readBytes
 
 @Service
 class StreamService(
     private val streamRepository: StreamRepository,
-    private val userRepository: userRepository,
+    private val userRepository: UserRepository,
     private val ffmpeg: FFmpeg,
     private val ffprobe: FFprobe,
 ) {

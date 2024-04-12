@@ -14,7 +14,7 @@ class MainController(
     @GetMapping("/")
     fun mainPage(model : Model): String {
         model.addAttribute("data", mainService.getMainPage())
-        return "index"
+        return "main"
 
     }
 

@@ -68,12 +68,13 @@ class StreamService(
     fun startStream(key: String): Flux<ServerSentEvent<String>> {
         val streamPath = Paths.get("stream")
 
-        val filePath = "stream/$key/"
-        val m3u8Path = "$filePath$key.m3u8"
+        val filePath = "/tmp/hls/$key"
+        val m3u8Path = Paths.get(File.separatorChar+"tmp",File.separatorChar + "hls", File.separatorChar + key,File.separatorChar + "index.m3u8" )
 
-        Flux.merge(checkStreamStart(m3u8Path),startStreamListen(streamPath, key, m3u8Path, filePath)).subscribeOn(Schedulers.parallel()).subscribe()
+        //Flux.merge(checkStreamStart(m3u8Path),startStreamListen(streamPath, key, m3u8Path, filePath)).subscribeOn(Schedulers.parallel()).subscribe()
         //Flux.merge(startStream,checkStreamStart).subscribe()
-        logger.info { "중간 지점 통과" }
+        checkStreamStart(m3u8Path).subscribeOn(Schedulers.parallel()).subscribe()
+        logger.info { "middle point" }
         return sink.asFlux().map { event ->
             ServerSentEvent.builder<String>(event.message)
                 .event(event.event)
@@ -81,14 +82,13 @@ class StreamService(
         }
     }
 
-    private fun checkStreamStart(m3u8Path: String): Flux<Boolean> {
+    private fun checkStreamStart(m3u8Path: Path): Flux<Boolean> {
         logger.info { "checking" }
         return Flux.interval(Duration.ofSeconds(1))
             .take(600)
             .map {
-                val paths = Paths.get(m3u8Path)
-                logger.info { paths.exists() }
-                if (paths.exists()) {
+                logger.info { m3u8Path }
+                if (m3u8Path.exists()) {
                     logger.info { "finish" }
                     sink.tryEmitNext(Event("finish", "finish"))
                     return@map true
@@ -144,7 +144,8 @@ class StreamService(
     }
 
     fun getTsFile(key: String, fileName: String): ResponseEntity<Any> {
-        val path = Paths.get("stream",File.separatorChar + key, File.separatorChar + fileName)
+        //val path = Paths.get("stream",File.separatorChar + key, File.separatorChar + fileName)
+        val path = Paths.get(File.separatorChar+"tmp",File.separatorChar + "hls", File.separatorChar + key,File.separatorChar + fileName )
         println(path.toString())
 
         return if(!path.exists()){

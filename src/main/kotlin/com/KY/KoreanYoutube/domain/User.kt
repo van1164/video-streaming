@@ -18,5 +18,8 @@ data class User(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "user_id")
-    val id: Long? = null
+    val id: Long? = null,
+
+    @Column(name = "on_air")
+    var onAir: Boolean = false,
 )

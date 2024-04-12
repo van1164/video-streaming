@@ -1,0 +1,31 @@
+version: '1'
+services:
+  spring-app:
+    image: van133/streaming:latest
+    container_name: streaming
+    ports:
+      - "8080:8080"
+    volumes:
+      - tmp:/tmp
+#    restart: unless-stopped
+
+
+  mysql:
+    image: mysql:latest
+    container_name: db-mysql
+    ports:
+      - "3306:3306"
+#    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ttink1245!
+      TZ: Asia/Seoul
+
+  nginx-rtmp:
+    image: van133/nginx-rtmp
+    ports:
+      - "1935:1935"
+    volumes:
+      - tmp:/tmp
+
+volumes:
+  tmp:

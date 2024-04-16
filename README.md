@@ -1,8 +1,12 @@
 # video-streaming
 
 ## 지금까지 상황
-
+### 동영상 업로드
 ![image](https://github.com/van1164/video-streaming/assets/52437971/bb5cc6ac-2b06-4e77-a8fc-8a0ff8c7c6dc)
+
+### 라이브 스트리밍
+![2024-04-1201-56-05-ezgif com-video-to-gif-converter](https://github.com/van1164/video-streaming/assets/52437971/0d95eeee-5a9a-4239-a309-1cf1580f9393)
+
 
 ## 1. 여러 Chunk들을 동시에 업로드해보기
 

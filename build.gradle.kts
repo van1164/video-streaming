@@ -60,8 +60,8 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
-	implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
-	implementation("com.github.jasync-sql:jasync-r2dbc-mysql:2.0.8")
+//	implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
+//	implementation("com.github.jasync-sql:jasync-r2dbc-mysql:2.0.8")
 
 }
 

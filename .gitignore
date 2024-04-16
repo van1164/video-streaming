@@ -195,3 +195,4 @@ db/mysql/data/
 *.ts
 
 *.m3u8
+*.xml

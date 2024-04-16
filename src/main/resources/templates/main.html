@@ -23,13 +23,5 @@
 
 </div>
 
-<p>동영상</p>
-<div th:each="live : ${data.streamList}">
-    <span>
-        <img th:src="${live.thumbNailUrl}">
-        <a th:href="${'detail/'+ live.id}"  th:text="${live.title}"></a>
-    </span>
-
-</div>
 </body>
 </html>

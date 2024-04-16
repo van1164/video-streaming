@@ -82,7 +82,7 @@ class PrincipalOauthUserService(
                 role = role,
                 provider = provider
             )
-            userRepository.save<User>(userEntity)
+            userRepository.save(userEntity)
         }
 
         return PrincipalDetails(userEntity, oAuth2User.attributes)

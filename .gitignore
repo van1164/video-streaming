@@ -177,3 +177,21 @@ gradle-app.setting
 
 
 src/main/resources/application.properties
+
+db/mysql/data/performance_schema/
+
+ffmpeg/model/other_models/
+
+ffmpeg/model/vmaf_4k_rb_v0.6.2/
+
+*.model
+
+ffmpeg/model/vmaf_rb_v0.6.3/
+
+db/mysql/data/
+
+*.properties
+
+*.ts
+
+*.m3u8

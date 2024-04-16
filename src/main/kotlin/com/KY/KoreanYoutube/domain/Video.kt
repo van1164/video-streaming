@@ -1,6 +1,7 @@
 package com.KY.KoreanYoutube.domain
 
 import jakarta.persistence.*
+import lombok.ToString
 import java.util.*
 
 @Entity
@@ -28,7 +29,8 @@ data class Video(
 
 
     @Column(name = "comments")
-    @OneToMany(mappedBy = "id", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @OneToMany(mappedBy = "id", fetch = FetchType.EAGER)
     val commentList : MutableList<Comment> = mutableListOf(),
 
 

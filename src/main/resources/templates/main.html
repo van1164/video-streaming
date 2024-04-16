@@ -14,10 +14,20 @@
 <a href="api/v1/upload/uploadPage">업로드</a>
 <a href="/oauth2/authorization/google">구글 로그인</a>
 
+<p>동영상</p>
 <div th:each="video : ${data.videoList}">
     <span>
         <img th:src="${video.thumbNailUrl}">
         <a th:href="${'detail/'+ video.id}"  th:text="${video.title}"></a>
+    </span>
+
+</div>
+
+<p>동영상</p>
+<div th:each="live : ${data.streamList}">
+    <span>
+        <img th:src="${live.thumbNailUrl}">
+        <a th:href="${'detail/'+ live.id}"  th:text="${live.title}"></a>
     </span>
 
 </div>

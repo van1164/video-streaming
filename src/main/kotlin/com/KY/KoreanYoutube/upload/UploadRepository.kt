@@ -6,8 +6,6 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Repository
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
-import java.io.FileInputStream
-import kotlin.math.log
 
 private val logger = KotlinLogging.logger {} // KotlinLogging 사용
 
@@ -15,19 +13,11 @@ private val logger = KotlinLogging.logger {} // KotlinLogging 사용
 class UploadRepository(
     val amazonS3: AmazonS3
 ) {
-
-
-
-    fun uploadVideoTsVer2(tsPath: String, tsFile: File) {
+    fun uploadVideoTs(tsPath: String, tsFile: File) {
         try {
-            val request = PutObjectRequest(
-                "video-stream-spring",
-                tsPath,
-                tsFile
-            )
-            amazonS3.putObject(request)
+            putObject(tsPath, tsFile)
 
-        }catch (e : Exception){
+        } catch (e: Exception) {
             logger.error { e.toString() }
         }
 
@@ -36,17 +26,7 @@ class UploadRepository(
     fun uploadVideoPart(video: MultipartFile, chunkNumber: Int, videoUUID: String): Boolean {
         try {
             logger.info("Upload : $chunkNumber")
-            val request = PutObjectRequest(
-                "video-stream-spring",
-                "$videoUUID.part$chunkNumber",
-                video.inputStream,
-                ObjectMetadata().apply {
-                    contentLength = video.size
-                }
-            )
-            request.requestClientOptions.readLimit = 80000000
-            amazonS3.putObject(request)
-
+            putObjectStream("$videoUUID.part$chunkNumber", video)
             return true
         } catch (e: Exception) {
             logger.error { "업로드 실패 $chunkNumber" }
@@ -55,7 +35,6 @@ class UploadRepository(
         }
 
     }
-
 
     fun getPartByteArray(bucketUrl: String, videoUUID: String, i: Int): ByteArray? {
         logger.info("getPart : $i")
@@ -81,45 +60,47 @@ class UploadRepository(
     fun uploadM3U8(m3u8Path: String, outputUUID: String) {
         println("Upload M3U8")
         val m3u8File = File(m3u8Path)
-        val request = PutObjectRequest(
-            "video-stream-spring",
-            "$outputUUID/$m3u8Path",
-            m3u8File,
-        )
-        request.requestClientOptions.readLimit = 3000
-        amazonS3.putObject(request)
-        m3u8File.delete()
+        putObject(key = "$outputUUID/$m3u8Path", file = m3u8File)
+        fileDelete(m3u8File)
     }
 
     fun uploadThumbnail(thumbNailPath: String) {
         val thumbNailFile = File(thumbNailPath)
+        putObject(thumbNailPath, thumbNailFile)
+        fileDelete(thumbNailFile)
+    }
+
+    private fun putObject(key: String, file: File) {
         val request = PutObjectRequest(
             "video-stream-spring",
-            thumbNailPath,
-            thumbNailFile
+            key,
+            file
         )
+        request.requestClientOptions.readLimit = 3000
         amazonS3.putObject(request)
-        thumbNailFile.delete()
     }
 
-    fun uploadM3U8(m3u8: MultipartFile) {
-        try {
-            logger.info("Upload : stream-m3u8")
-            val request = PutObjectRequest(
-                "video-stream-spring",
-                "${m3u8.originalFilename}",
-                m3u8.inputStream,
-                ObjectMetadata().apply {
-                    contentLength = m3u8.size
-                }
-            )
-            request.requestClientOptions.readLimit = 80000000
-            amazonS3.putObject(request)
-        } catch (e: Exception) {
-            logger.error { "업로드 실패 m3u8" }
-            logger.error { e.toString() }
+    private fun putObjectStream(
+        key: String,
+        video: MultipartFile
+    ) {
+        val request = PutObjectRequest(
+            "video-stream-spring",
+            key,
+            video.inputStream,
+            ObjectMetadata().apply {
+                contentLength = video.size
+            }
+        )
+        request.requestClientOptions.readLimit = 80000
+        amazonS3.putObject(request)
+    }
+
+    private fun fileDelete(file:File){
+        if (!file.delete()) {
+            throw IllegalStateException()
         }
-
     }
+
 
 }

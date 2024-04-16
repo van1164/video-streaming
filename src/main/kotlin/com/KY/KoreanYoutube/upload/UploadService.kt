@@ -1,5 +1,6 @@
 package com.KY.KoreanYoutube.upload
 
+import com.KY.KoreanYoutube.config.log
 import com.KY.KoreanYoutube.domain.Video
 import com.KY.KoreanYoutube.dto.UploadVideoPartDTO
 import com.KY.KoreanYoutube.video.VideoRepository
@@ -53,66 +54,38 @@ class UploadService(
     val sink = Sinks.many().multicast().onBackpressureBuffer<Event>()
     @Transactional
     fun uploadVideoPartLast(fileUUID : String, totalChunk : Int): Flux<ServerSentEvent<String>> {
-        //여러 part를 하나의 파일로 만들기
         val stopWatch = StopWatch()
-        stopWatch.start("mp4로 만드는데 걸린 시간")
         val inputFilePath = Paths.get(UUID.randomUUID().toString() + ".mp4")
+        val m3u8Path = "$fileUUID.m3u8"
+        val thumbNailPath = UUID.randomUUID().toString() + ".jpg"
+
+        stopWatch.start("mp4로 만드는데 걸린 시간")
         runBlocking {
             Files.createFile(inputFilePath)
         }
 
-        val videoFlux = Flux.range(0,totalChunk)
-            .publishOn(Schedulers.boundedElastic())
-            .flatMapSequential {
-                val flux = uploadRepository.getPartByteArray(
-                    bucketUrl,
-                    fileUUID,
-                    it
-                )
-                if(flux !=null){
-                    Flux.just(flux)
-                }
-                else{
-                    Flux.empty()
-                }
-            }
-            .doFirst {
-                sink.tryEmitNext(Event("ing" ,"파일 업로드 완료하는 중.."))
-            }
-            .doOnNext{videoPart->
-                logger.info{"파일write"}
-                Mono.fromCallable {
-                    Files.write(inputFilePath, videoPart, StandardOpenOption.APPEND)
-                }.subscribeOn(Schedulers.boundedElastic()).subscribe()
-            }
-
-
+        val videoFlux = videoMergeFlux(totalChunk, fileUUID, inputFilePath)
         stopWatch.stop()
-        val m3u8Path = "$fileUUID.m3u8"
-        val thumbNailPath = UUID.randomUUID().toString() + ".jpg"
 
-        val deleteChunkFileFlux =
-            Flux.range(0,totalChunk).flatMap{
-                Flux.just(
-                    uploadRepository.deletePart(fileUUID, it)
-                )
-            }.doOnComplete {
-                sink.tryEmitNext(Event("ing","썸네일 생성중.."))
+        val deleteChunkFileFlux = deleteChunkFileFlux(totalChunk, fileUUID)
+
+        val thumbNailFlux =
+            Mono.zip(Mono.just(inputFilePath),Mono.just(thumbNailPath), Mono.just(fileUUID))
+                .flatMap{
+                    Mono.just(it).doOnNext {
+                        createThumbNail(it.t1,it.t2)
+                    }
+                    .doOnNext {
+                        saveThumbnailData(it.t3,it.t2)
+                    }
+                    .subscribeOn(Schedulers.parallel())
             }
-                .subscribeOn(Schedulers.boundedElastic())
 
-        val thumbNailFlux = Mono.zip(Mono.just(inputFilePath),Mono.just(thumbNailPath), Mono.just(fileUUID))
-            .flatMap{
-                Mono.just(it).doOnNext {
-                    createThumbNail(it.t1,it.t2)
-                }
-                    .doOnNext { saveThumbnailData(it.t3,it.t2) }.subscribeOn(Schedulers.parallel())
-            }
-//        val saveVideoFlux = Mono.zip(Mono.just(fileUUID),Mono.just(thumbNailPath))
-//            .flatMap { Mono.just(saveThumbnailData(it.t1,it.t2)).subscribeOn(Schedulers.parallel()) }
-
-        val mp4ToHlsFlux = Mono.zip(Mono.just(inputFilePath),Mono.just(m3u8Path),Mono.just(fileUUID))
-            .flatMap{ Mono.just(mp4ToHls(it.t1,it.t2,it.t3)).subscribeOn(Schedulers.parallel())}.doFirst { sink.tryEmitNext(Event("ing","파일 변환 처리중...")) }
+        val mp4ToHlsFlux =
+            Mono.zip(Mono.just(inputFilePath),Mono.just(m3u8Path),Mono.just(fileUUID))
+                .flatMap{ Mono.just(mp4ToHls(it.t1,it.t2,it.t3))
+                .subscribeOn(Schedulers.parallel())}
+                .doFirst { sink.tryEmitNext(Event("ing","파일 변환 처리중...")) }
 
         Flux.concat(videoFlux,Flux.merge(deleteChunkFileFlux,thumbNailFlux,mp4ToHlsFlux))
             .doOnComplete {
@@ -126,6 +99,48 @@ class UploadService(
         }
 
 
+    }
+
+    private fun deleteChunkFileFlux(totalChunk: Int, fileUUID: String): Flux<Unit> {
+        return Flux.range(0, totalChunk).flatMap {
+            Flux.just(
+                uploadRepository.deletePart(fileUUID, it)
+            )
+        }.doOnComplete {
+            sink.tryEmitNext(Event("ing", "썸네일 생성중.."))
+        }.subscribeOn(Schedulers.boundedElastic())
+    }
+
+    private fun videoMergeFlux(
+        totalChunk: Int,
+        fileUUID: String,
+        inputFilePath: Path
+    ) = Flux.range(0, totalChunk)
+        .publishOn(Schedulers.boundedElastic())
+        .flatMapSequential {
+            getPartByteArray(fileUUID, it)
+        }
+        .doFirst {
+            sink.tryEmitNext(Event("ing", "파일 업로드 완료하는 중.."))
+        }
+        .doOnNext { videoPart ->
+            logger.info { "파일write" }
+            Mono.fromCallable {
+                Files.write(inputFilePath, videoPart, StandardOpenOption.APPEND)
+            }.subscribeOn(Schedulers.boundedElastic()).subscribe()
+        }
+
+    private fun getPartByteArray(fileUUID: String, it: Int): Flux<ByteArray> {
+        val flux = uploadRepository.getPartByteArray(
+            bucketUrl,
+            fileUUID,
+            it
+        )
+        return if (flux != null) {
+            Flux.just(flux)
+        } else {
+            Flux.empty()
+        }
     }
 
     private fun mp4ToHls(
@@ -166,11 +181,18 @@ class UploadService(
         println(stopWatch.prettyPrint())
     }
 
-
+    @Transactional
     fun saveThumbnailData(fileUUID : String,thumbNailUrl : String){
         val video = videoRepository.findById(fileUUID).getOrNull()
+        log.info { "=============================" }
+        log.info { video.toString() }
+        log.info { "=============================" }
         if(video != null){
             video.thumbNailUrl =thumbNailUrl
+            log.info { "=============================" }
+            log.info { video.thumbNailUrl }
+            log.info { "=============================" }
+
         }
     }
 
@@ -183,7 +205,7 @@ class UploadService(
             if (tsFile.isFile) {
                 futures.add(
                     CompletableFuture.runAsync {
-                        uploadRepository.uploadVideoTsVer2("$outputUUID/$tsPath", tsFile)
+                        uploadRepository.uploadVideoTs("$outputUUID/$tsPath", tsFile)
                         tsFile.delete()
                     }
                 )
@@ -198,8 +220,6 @@ class UploadService(
     }
 
     fun uploadVideoPart(video: MultipartFile, videoData: UploadVideoPartDTO): Mono<ResponseEntity<HttpStatus>> {
-//        val testPath = Paths.get("test_" +videoData.chunkNumber.toString())
-//        Files.copy(video.inputStream,testPath)
         return Mono.just(
             uploadRepository.uploadVideoPart(video, videoData.chunkNumber,videoData.fileUUID)
         ).map{
@@ -259,10 +279,5 @@ class UploadService(
         FFmpegExecutor(ffmpeg, ffprobe).createJob(builder).run()
         File(inputFilePath.toString()).delete()
     }
-
-    fun uploadM3U8(m3u8: MultipartFile) {
-        uploadRepository.uploadM3U8(m3u8)
-    }
-
 
 }

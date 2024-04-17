@@ -1,6 +1,7 @@
 package com.KY.KoreanYoutube.main
 
 import com.KY.KoreanYoutube.config.log
+import com.KY.KoreanYoutube.security.logger
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -21,7 +22,9 @@ class MainController(
 
     @GetMapping("/")
     fun mainPage(request:HttpServletRequest,model : Model): String {
-        model.addAttribute("data", mainService.getMainPage())
+        val item = mainService.getMainPage()
+        logger.info{item}
+        model.addAttribute("videoList", item)
         val jwt = request.getHeader("Auth")
         model.addAttribute("auth",jwt)
         log.info { jwt }

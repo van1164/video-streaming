@@ -1,10 +1,8 @@
 package com.KY.KoreanYoutube.upload
 
-import com.KY.KoreanYoutube.config.log
-import com.KY.KoreanYoutube.domain.Video
+import com.KY.KoreanYoutube.domain.VideoR2dbc
 import com.KY.KoreanYoutube.dto.UploadVideoPartDTO
-import com.KY.KoreanYoutube.video.VideoRepository
-import jakarta.transaction.Transactional
+import com.KY.KoreanYoutube.video.VideoR2DBCRepository
 import kotlinx.coroutines.*
 import mu.KotlinLogging
 import net.bramp.ffmpeg.FFmpeg
@@ -16,22 +14,21 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.util.StopWatch
 import org.springframework.web.multipart.MultipartFile
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Sinks
 import reactor.core.scheduler.Schedulers
+import reactor.kotlin.core.publisher.onErrorReturn
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
-import java.time.LocalDateTime
-import java.time.ZoneId
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import kotlin.jvm.optionals.getOrNull
 
 private val logger = KotlinLogging.logger {} // KotlinLogging 사용
 
@@ -43,8 +40,8 @@ data class Event(
 val s3URL = "https://video-stream-spring.s3.ap-northeast-2.amazonaws.com/"
 @Service
 class UploadService(
-    private val uploadRepository: UploadRepository,
-    private val videoRepository: VideoRepository,
+    private val s3Repository: S3Repository,
+    private val videoRepository: VideoR2DBCRepository,
     @Value("\${aws.s3.bucketUrl}")
     private val bucketUrl: String,
     private val ffmpeg: FFmpeg,
@@ -52,7 +49,7 @@ class UploadService(
 ) {
 
     val sink = Sinks.many().multicast().onBackpressureBuffer<Event>()
-    @Transactional
+    @Transactional("connectionFactoryTransactionManager")
     fun uploadVideoPartLast(fileUUID : String, totalChunk : Int): Flux<ServerSentEvent<String>> {
         val stopWatch = StopWatch()
         val inputFilePath = Paths.get(UUID.randomUUID().toString() + ".mp4")
@@ -75,7 +72,7 @@ class UploadService(
                     Mono.just(it).doOnNext {
                         createThumbNail(it.t1,it.t2)
                     }
-                    .doOnNext {
+                    .flatMap {
                         saveThumbnailData(it.t3,it.t2)
                     }
                     .subscribeOn(Schedulers.parallel())
@@ -104,7 +101,7 @@ class UploadService(
     private fun deleteChunkFileFlux(totalChunk: Int, fileUUID: String): Flux<Unit> {
         return Flux.range(0, totalChunk).flatMap {
             Flux.just(
-                uploadRepository.deletePart(fileUUID, it)
+                s3Repository.deletePart(fileUUID, it)
             )
         }.doOnComplete {
             sink.tryEmitNext(Event("ing", "썸네일 생성중.."))
@@ -131,7 +128,7 @@ class UploadService(
         }
 
     private fun getPartByteArray(fileUUID: String, it: Int): Flux<ByteArray> {
-        val flux = uploadRepository.getPartByteArray(
+        val flux = s3Repository.getPartByteArray(
             bucketUrl,
             fileUUID,
             it
@@ -160,7 +157,7 @@ class UploadService(
         // 여러 TS들을 S3에 업로드
         uploadVideoTs(outputUUID)
 
-        uploadRepository.uploadM3U8(m3u8Path, outputUUID)
+        s3Repository.uploadM3U8(m3u8Path, outputUUID)
         stopWatch.stop()
         println(stopWatch.prettyPrint())
     }
@@ -176,24 +173,20 @@ class UploadService(
 
         extractThumbnail(inputFilePath.toString(), thumbNailPath)
         //uploadThumbnail
-        uploadRepository.uploadThumbnail(thumbNailPath)
+        s3Repository.uploadThumbnail(thumbNailPath)
         stopWatch.stop()
         println(stopWatch.prettyPrint())
     }
 
-    @Transactional
-    fun saveThumbnailData(fileUUID : String,thumbNailUrl : String){
-        val video = videoRepository.findById(fileUUID).getOrNull()
-        log.info { "=============================" }
-        log.info { video.toString() }
-        log.info { "=============================" }
-        if(video != null){
-            video.thumbNailUrl =thumbNailUrl
-            log.info { "=============================" }
-            log.info { video.thumbNailUrl }
-            log.info { "=============================" }
-
-        }
+    @Transactional("connectionFactoryTransactionManager")
+    fun saveThumbnailData(fileUUID : String,thumbNailUrl : String): Mono<VideoR2dbc> {
+        return videoRepository.findFirstByUrl(fileUUID)
+            .doOnNext {
+                it.thumbNailUrl =s3URL+"thumb/"+ thumbNailUrl
+            }
+            .flatMap{
+                videoRepository.save(it)
+            }
     }
 
     private fun uploadVideoTs(outputUUID: String) {
@@ -205,7 +198,7 @@ class UploadService(
             if (tsFile.isFile) {
                 futures.add(
                     CompletableFuture.runAsync {
-                        uploadRepository.uploadVideoTs("$outputUUID/$tsPath", tsFile)
+                        s3Repository.uploadVideoTs("$outputUUID/$tsPath", tsFile)
                         tsFile.delete()
                     }
                 )
@@ -221,7 +214,7 @@ class UploadService(
 
     fun uploadVideoPart(video: MultipartFile, videoData: UploadVideoPartDTO): Mono<ResponseEntity<HttpStatus>> {
         return Mono.just(
-            uploadRepository.uploadVideoPart(video, videoData.chunkNumber,videoData.fileUUID)
+            s3Repository.uploadVideoPart(video, videoData.chunkNumber,videoData.fileUUID)
         ).map{
             if(it){
                 ResponseEntity<HttpStatus>(HttpStatus.OK)
@@ -232,19 +225,19 @@ class UploadService(
         }.subscribeOn(Schedulers.boundedElastic())
 
     }
-    @Transactional
+    @Transactional("connectionFactoryTransactionManager")
     fun saveVideoData(
         title: String,
         fileUUID: String,
         userName: String
-    ) {
-        videoRepository.save(
-            Video(
-                createDate = Date.from(
-                    LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()
-                ), id = fileUUID, title = title, userName = userName,thumbNailUrl = null
-            )
+    ): Mono<ResponseEntity<HttpStatus>> {
+        return videoRepository.save(
+            VideoR2dbc(url = fileUUID, title = title, userName = userName,thumbNailUrl = null)
         )
+            .map{
+                ResponseEntity.ok().build<HttpStatus>()
+            }
+            .onErrorReturn(ResponseEntity.badRequest().build())
     }
 
     private fun extractThumbnail(inputFilePath: String, thumbNailPath: String) {

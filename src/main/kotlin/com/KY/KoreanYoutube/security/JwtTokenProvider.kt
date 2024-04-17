@@ -1,5 +1,6 @@
 package com.KY.KoreanYoutube.security
 
+import com.KY.KoreanYoutube.redis.RedisRepository
 import com.nimbusds.oauth2.sdk.Role
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
@@ -22,7 +23,8 @@ import kotlin.collections.LinkedHashMap
 @RequiredArgsConstructor
 class JwtTokenProvider(
     @Value("\${jwt.secret}")
-    var secretKey: String
+    var secretKey: String,
+    val redisRepository: RedisRepository
 ) {
 
     val EXPIRATION_MILLISECONDS: Long = 10000 * 60 * 30
@@ -65,6 +67,7 @@ class JwtTokenProvider(
     fun validateToken(token: String): Boolean {
         try {
             getClaims(token)
+            redisRepository.loadByJwt(token)?.run{return false}
             return true
         } catch (e: Exception) {
             println(e.message)

@@ -11,7 +11,7 @@ import java.io.File
 private val logger = KotlinLogging.logger {} // KotlinLogging 사용
 
 @Repository
-class UploadRepository(
+class S3Repository(
     val fileUtils: FileUtils,
     val s3Utils: S3Utils
 ) {
@@ -66,7 +66,7 @@ class UploadRepository(
 
     fun uploadThumbnail(thumbNailPath: String) {
         val thumbNailFile = File(thumbNailPath)
-        s3Utils.put(thumbNailPath, thumbNailFile)
+        s3Utils.put("thumb/$thumbNailPath", thumbNailFile)
         fileUtils.delete(thumbNailFile)
     }
 

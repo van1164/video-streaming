@@ -4,8 +4,10 @@ import com.KY.KoreanYoutube.security.JwtAuthenticationFilter
 import com.KY.KoreanYoutube.security.OAuthSuccessHandler
 import com.KY.KoreanYoutube.security.PrincipalOauthUserService
 import mu.KotlinLogging
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Import
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.invoke
@@ -19,6 +21,7 @@ import org.springframework.security.web.server.context.NoOpServerSecurityContext
 val log = KotlinLogging.logger{}
 
 @EnableWebSecurity
+@Import(DataSourceAutoConfiguration::class)
 @Configuration
 class SecurityConfig(
     val principalOauthUserService: PrincipalOauthUserService,

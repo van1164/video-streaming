@@ -1,6 +1,7 @@
 package com.KY.KoreanYoutube.upload
 
 import com.KY.KoreanYoutube.config.log
+import com.KY.KoreanYoutube.domain.VideoR2dbc
 import com.KY.KoreanYoutube.dto.UploadVideoDataDTO
 import com.KY.KoreanYoutube.dto.UploadVideoPartDTO
 import org.springframework.http.HttpStatus
@@ -52,13 +53,12 @@ class UploadController(
     fun saveVideoData(
         @AuthenticationPrincipal user : UserDetails,
         @RequestBody  uploadVideoDataDTO: UploadVideoDataDTO
-    ):ResponseEntity<Any>{
+    ): Mono<ResponseEntity<HttpStatus>> {
         println(user)
         log.info { uploadVideoDataDTO.title }
         log.info { uploadVideoDataDTO.fileUUID }
         log.info { "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" }
-        uploadService.saveVideoData(uploadVideoDataDTO.title,uploadVideoDataDTO.fileUUID,user.username)
-        return ResponseEntity.ok().build()
+        return uploadService.saveVideoData(uploadVideoDataDTO.title,uploadVideoDataDTO.fileUUID,user.username)
     }
 
     @PreAuthorize("isAuthenticated()")

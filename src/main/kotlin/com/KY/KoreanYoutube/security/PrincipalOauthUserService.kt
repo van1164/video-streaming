@@ -2,7 +2,6 @@ package com.KY.KoreanYoutube.security
 
 import com.KY.KoreanYoutube.domain.User
 import com.KY.KoreanYoutube.user.UserRepository
-import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -11,6 +10,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 
 @Service
@@ -21,7 +21,7 @@ class PrincipalOauthUserService(
     //구글로 부터 받은 userRequest 데이터에 대한 후처리되는 함수
     //함수 종료시 @AuthenticationPrincipal 어노테이션이 만들어진다.
     @Throws(OAuth2AuthenticationException::class)
-    @Transactional
+    @Transactional(value = "transactionManager")
     override fun loadUser(userRequest: OAuth2UserRequest): OAuth2User? {
         println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         //"registraionId" 로 어떤 OAuth 로 로그인 했는지 확인 가능(google,naver등)

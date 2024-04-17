@@ -15,10 +15,10 @@
 <a href="/oauth2/authorization/google">구글 로그인</a>
 
 <p>동영상</p>
-<div th:each="video : ${data.videoList}">
+<div th:each="video : ${videoList}">
     <span>
-        <img th:src="${video.thumbNailUrl}">
-        <a th:href="${'detail/'+ video.id}"  th:text="${video.title}"></a>
+        <img th:src="${video.thumbNailUrl}" width="30%">
+        <a th:href="${'detail/'+ video.url}"  th:text="${video.title}"></a>
     </span>
 
 </div>

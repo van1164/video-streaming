@@ -13,6 +13,9 @@ import java.util.*
 data class User(
 
     @Id
+    @Column(name = "user_id")
+    val userId: String,
+
     @Column(name = "name")
     val name: String,
 

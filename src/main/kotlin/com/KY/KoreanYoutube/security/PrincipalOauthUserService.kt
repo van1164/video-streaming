@@ -1,10 +1,7 @@
 package com.KY.KoreanYoutube.security
 
 import com.KY.KoreanYoutube.domain.User
-import com.KY.KoreanYoutube.user.UserRepository
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
+import com.KY.KoreanYoutube.user.UserService
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException
@@ -15,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class PrincipalOauthUserService(
-    private val userRepository: UserRepository,
+    private val userService: UserService,
 ) : DefaultOAuth2UserService() {
 
     //구글로 부터 받은 userRequest 데이터에 대한 후처리되는 함수
@@ -66,23 +63,25 @@ class PrincipalOauthUserService(
         val providerId: String = oAuth2UserInfo.providerId
         val password = providerId //중요하지 않음 그냥 패스워드 암호화 하
         val email: String = oAuth2UserInfo.email
-        val username = provider.name + "_" + email
-        println("AAAAAAAAAAAAAAAAAAAA"+username)
+        val userId = provider.name + "_" + email
+        val name = oAuth2UserInfo.name
+        println("AAAAAAAAAAAAAAAAAAAA"+userId)
         val role: Role = Role.USER
 
 
 
-        var userEntity: User? = userRepository.findUserByName(username)
+        var userEntity: User? = userService.findByUserId(userId)
         //처음 서비스를 이용한 회원일 경우
         if (userEntity == null) {
             userEntity = User(
-                name = username,
+                userId = userId,
+                name = name,
                 password = password,
                 email = email,
                 role = role,
                 provider = provider
             )
-            userRepository.save(userEntity)
+            userService.save(userEntity)
         }
 
         return PrincipalDetails(userEntity, oAuth2User.attributes)

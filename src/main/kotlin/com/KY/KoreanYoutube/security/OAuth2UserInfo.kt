@@ -9,10 +9,10 @@ interface OAuth2UserInfo {
     val name: String
 }
 
-enum class OAuthProvider{
-    NAVER,
-    KAKAO,
-    GOOGLE
+enum class OAuthProvider(id:Int){
+    NAVER(0),
+    KAKAO(1),
+    GOOGLE(2)
 }
 
 

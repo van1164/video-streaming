@@ -10,11 +10,11 @@ import java.util.Date
 @Controller
 @RequestMapping("/api/v1/user")
 class UserController(
-    val userRepository: UserRepository
+    val userService: UserService
 ) {
 
     @GetMapping("/test_create")
     fun testCreate(){
-        userRepository.save(User("test", "test@naver.com",OAuthProvider.GOOGLE))
+        userService.save(User("test", "teset","test@naver.com",OAuthProvider.GOOGLE))
     }
 }

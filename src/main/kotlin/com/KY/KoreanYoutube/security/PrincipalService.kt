@@ -1,7 +1,7 @@
 package com.KY.KoreanYoutube.security
 
 import com.KY.KoreanYoutube.domain.User
-import com.KY.KoreanYoutube.user.UserRepository
+import com.KY.KoreanYoutube.user.UserService
 import lombok.RequiredArgsConstructor
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 @Service
 @RequiredArgsConstructor
 class PrincipalService(
-    private val userRepository: UserRepository
+    private val userService: UserService
 ) : UserDetailsService {
 
 
@@ -22,7 +22,7 @@ class PrincipalService(
     //함수 종료시 @AuthenticationPrincipal 어노테이션이 만들어진다.
     @Throws(UsernameNotFoundException::class)
     override fun loadUserByUsername(username: String): UserDetails? {
-        val findUser: User? = userRepository.findUserByName(username)
+        val findUser: User? = userService.findByUserId(username)
         println("XXXXXXXXXXXXXXXXXXXXXXXXXX")
         if (findUser != null) {
             return PrincipalDetails(findUser)

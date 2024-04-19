@@ -19,7 +19,7 @@ class PrincipalDetails : UserDetails, OAuth2User{
     }
 
     override fun getName(): String {
-        return user.name
+        return user.userId
     }
 
     override fun getAttributes(): MutableMap<String, Any> {

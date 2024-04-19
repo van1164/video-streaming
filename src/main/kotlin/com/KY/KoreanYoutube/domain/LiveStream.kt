@@ -42,5 +42,5 @@ data class LiveStream(
     var bad : Int = 0,
 
     ){
-    constructor(streamDTO: StreamDTO, streamKey:String):this(streamDTO.title,streamDTO.description,streamDTO.userName,streamKey)
+    constructor(streamDTO: StreamDTO,userId : String,streamKey:String):this(streamDTO.title,streamDTO.description,userId,streamKey)
 }

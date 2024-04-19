@@ -36,6 +36,7 @@ class SecurityConfig(
             cors { }
             authorizeRequests {
                 authorize("/api/v1/upload/**",authenticated)
+                authorize("/api/v1/stream/**",authenticated)
                 authorize("/**",permitAll)
             }
             oauth2Login {

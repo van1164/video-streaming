@@ -2,7 +2,6 @@ package com.KY.KoreanYoutube.security
 
 import com.KY.KoreanYoutube.domain.User
 import com.KY.KoreanYoutube.redis.RedisRepository
-import com.KY.KoreanYoutube.user.UserRepository
 import com.KY.KoreanYoutube.user.UserService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

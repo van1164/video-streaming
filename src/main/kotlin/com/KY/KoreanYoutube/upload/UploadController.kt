@@ -4,6 +4,8 @@ import com.KY.KoreanYoutube.config.log
 import com.KY.KoreanYoutube.domain.VideoR2dbc
 import com.KY.KoreanYoutube.dto.UploadVideoDataDTO
 import com.KY.KoreanYoutube.dto.UploadVideoPartDTO
+import com.KY.KoreanYoutube.security.PrincipalDetails
+import com.KY.KoreanYoutube.user.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -21,7 +23,8 @@ import reactor.core.publisher.Mono
 @Controller
 @RequestMapping("/api/v1/upload")
 class UploadController(
-    val uploadService: UploadService
+    val uploadService: UploadService,
+    val userService: UserService
 ) {
 
 
@@ -51,20 +54,20 @@ class UploadController(
 
     @PostMapping("/saveVideoData")
     fun saveVideoData(
-        @AuthenticationPrincipal user : UserDetails,
+        @AuthenticationPrincipal user : PrincipalDetails,
         @RequestBody  uploadVideoDataDTO: UploadVideoDataDTO
     ): Mono<ResponseEntity<HttpStatus>> {
         println(user)
         log.info { uploadVideoDataDTO.title }
         log.info { uploadVideoDataDTO.fileUUID }
         log.info { "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" }
-        return uploadService.saveVideoData(uploadVideoDataDTO.title,uploadVideoDataDTO.fileUUID,user.username)
+        return uploadService.saveVideoData(uploadVideoDataDTO.title,uploadVideoDataDTO.fileUUID,user.name)
     }
 
-    @PreAuthorize("isAuthenticated()")
+    //@PreAuthorize("isAuthenticated()")
     @RequestMapping("/uploadPage")
-    fun uploadPage() : String{
-        return "uploadPage"
+    fun uploadPage() : Mono<String> {
+        return Mono.just("uploadPage")
     }
 
 

@@ -28,7 +28,7 @@
 
 <body>
 <div>
-<input hidden="hidden" type="text" name="userId" value=1 id="userId">
+<input hidden="hidden" type="text" name="userId"  id="userId">
 <div>제목 : <br/><input type="text" name="title" value="" id="title"></div>
 <div>설명: <br/><input type="text" name="description" value="" id="description"></div>
 <button onclick="streamStart()">스트리밍 시작</button>
@@ -46,7 +46,6 @@
     streamStart = () => {
         var title = document.getElementById("title").value;
         var description = document.getElementById("description").value;
-        var userId = document.getElementById("userId").value
 
         if (title.trim() === "" || description.trim() === "") {
             alert("비우지 마세요");
@@ -55,7 +54,6 @@
         const formData = new FormData();
         formData.append("title",title)
         formData.append("description",description)
-        formData.append("userId",userId)
         fetch("/api/v1/stream/save_stream", {
             method: "POST",
             body: formData,
@@ -69,10 +67,10 @@
                     const keyElement = document.getElementById("key");
                     rtmpElement.textContent = "rtmp://localhost:1935/live"
                     keyElement.textContent = data
-                    const eventSource = new EventSource("http://localhost:8080/api/v1/stream/start_stream/" + data)
+                    const eventSource = new EventSource("http://localhost/api/v1/stream/start_stream/" + data)
                     eventSource.addEventListener("finish", (event) => {
                         console.log(event.data)
-                        videoSrc = "http://localhost:8080/api/v1/stream/live/"+data
+                        videoSrc = "http://localhost/api/v1/stream/live/"+data
                         initHls()
                         initVideo()
                         eventSource.close()

@@ -36,7 +36,7 @@
     /* video Element */
     let video = null;
     /* 샘플 m3u8 url */
-    let videoSrc = "[[${m3u8Url}]]"
+    let videoSrc ="http://localhost:8080/api/v1/stream/live/"+"[[${streamKey}]]"
 
     /* initVideo */
     const initVideo = () => {

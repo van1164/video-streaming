@@ -1,10 +1,12 @@
 package com.KY.KoreanYoutube.stream
 
 import com.KY.KoreanYoutube.dto.StreamDTO
+import com.KY.KoreanYoutube.security.PrincipalDetails
 import mu.KotlinLogging
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import reactor.core.publisher.Flux
@@ -16,9 +18,9 @@ class StreamController(
     val streamService: StreamService
 ) {
     val logger = KotlinLogging.logger{}
-    @GetMapping("")
+    @GetMapping("/streamPage")
     fun streamPage(): String {
-        return "streamming"
+        return "streaming"
     }
 
     @ResponseBody
@@ -33,9 +35,10 @@ class StreamController(
 
     @PostMapping("/save_stream")
     fun saveStream(
+        @AuthenticationPrincipal user : PrincipalDetails,
         streamDTO : StreamDTO // 나중에 jwt로 변경 예정
     ): ResponseEntity<Any> {
-        return streamService.saveStream(streamDTO)
+        return streamService.saveStream(streamDTO,user.name)
     }
 
     @GetMapping("/stop")
@@ -71,4 +74,5 @@ class StreamController(
         logger.info { fileName }
         return streamService.getTsFile(key,fileName)
     }
+
 }

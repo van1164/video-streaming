@@ -10,7 +10,8 @@ import java.time.LocalDateTime
 @Table(name = "user_r2dbc")
 data class UserR2dbc(
 
-    val name: String,
+    val userId: String,
+    val name : String,
     val email : String,
     val provider : OAuthProvider,
     val password : String = "oAuthPassword",

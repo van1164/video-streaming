@@ -31,7 +31,9 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-authorization-server")
+
 	implementation("org.springframework.boot:spring-boot-starter-security")
+
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
@@ -52,7 +54,6 @@ dependencies {
 	implementation("io.github.microutils:kotlin-logging:1.12.0")
 
 	//oAuth2
-	implementation ("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
 	//jwt
@@ -60,8 +61,10 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
-//	implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
-//	implementation("com.github.jasync-sql:jasync-r2dbc-mysql:2.0.8")
+	implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
+	implementation("com.github.jasync-sql:jasync-r2dbc-mysql:2.2.0")
+
+	testImplementation("io.projectreactor:reactor-test:3.6.5")
 
 }
 

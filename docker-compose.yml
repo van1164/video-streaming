@@ -11,19 +11,18 @@ services:
 
 
   mysql:
-    image: mysql:latest
-    container_name: db-mysql
+    image: redis
+    container_name: redis
     ports:
-      - "3306:3306"
-#    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ttink1245!
-      TZ: Asia/Seoul
+      - "6379:6379"
+    restart: unless-stopped
+
 
   nginx-rtmp:
     image: van133/nginx-rtmp
     ports:
       - "1935:1935"
+      - "80:80"
     volumes:
       - tmp:/tmp
 

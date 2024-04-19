@@ -2,6 +2,7 @@ package com.KY.KoreanYoutube.upload
 
 import com.KY.KoreanYoutube.domain.VideoR2dbc
 import com.KY.KoreanYoutube.dto.UploadVideoPartDTO
+import com.KY.KoreanYoutube.utils.s3URL
 import com.KY.KoreanYoutube.video.VideoR2DBCRepository
 import kotlinx.coroutines.*
 import mu.KotlinLogging
@@ -37,7 +38,7 @@ data class Event(
     val message : String
 )
 
-val s3URL = "https://video-stream-spring.s3.ap-northeast-2.amazonaws.com/"
+
 @Service
 class UploadService(
     private val s3Repository: S3Repository,

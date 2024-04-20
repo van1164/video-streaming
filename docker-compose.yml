@@ -1,4 +1,4 @@
-version: '1'
+version: '2'
 services:
   spring-app:
     image: van133/streaming:latest

@@ -109,6 +109,14 @@
         const totalChunks = Math.ceil(file.size / chunkSize);
         let currentChunk = 0;
 
+        const generateUUID = () =>
+            ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+                (
+                    c ^
+                    (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
+                ).toString(16)
+            );
+
         // chunk file 전송
         const sendNextChunk = () => {
 
@@ -121,7 +129,7 @@
             // form data 형식으로 전송
             const formData = new FormData();
             formData.append("video", chunk);
-            console.log(crypto.randomUUID().toString())
+            console.log(generateUUID())
             const json = JSON.stringify({title : title, chunkNumber : currentChunk, totalChunk : totalChunks, fileUUID : crypto.randomUUID().toString()})
             formData.append("videoData", new Blob([json],{type:"application/json"}) );
 

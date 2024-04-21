@@ -26,6 +26,7 @@ services:
     volumes:
       - tmp:/tmp
       - ./conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./conf/nginx.conf:/etc/nginx/conf.d/default.d
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
 

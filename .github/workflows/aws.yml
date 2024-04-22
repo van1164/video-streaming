@@ -44,7 +44,7 @@ jobs:
           ./gradlew clean build --exclude-task test
           ls
           pwd
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/streaming .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/streaming:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/streaming:latest
 
           cd live-streamming
@@ -70,6 +70,7 @@ jobs:
         script: |
           cd app
           sudo docker compose down
+          suod docker compose pull
           sudo docker rm -f $(sudo docker ps -qa)
           sudo cp -r ../video-streaming/data ./
           pwd
@@ -80,3 +81,4 @@ jobs:
           #sudo docker-compose build
           #sudo sh ./init-letsencrypt.sh
           sudo docker compose up -d
+          sudo docker image prune --all --force

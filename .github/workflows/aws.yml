@@ -68,7 +68,10 @@ jobs:
         username: ubuntu
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          sudo cd video-streaming
+          sudo cd app
+          pwd
+          ls
+          pwd
           sudo docker pull van133/streaming
           sudo docker pull van133/nginx-rtmp:ssl
           #sudo docker-compose build

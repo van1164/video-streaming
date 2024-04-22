@@ -78,6 +78,7 @@ jobs:
           sudo curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
           sudo chmod 755 $DESTINATION
           sudo systemctl start docker
+          sudo cd video-streaming
           sudo docker pull van133/streaming
           sudo docker pull van133/nginx-rtmp:ssl
           sudo docker-compose build

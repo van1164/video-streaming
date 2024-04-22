@@ -14,6 +14,14 @@
 </body>
 <script>
     let jwt = localStorage.getItem("jwt")
+
+    const generateUUID = () =>
+        ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+            (
+                c ^
+                (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
+            ).toString(16)
+        );
     const sendVideoChunks = () => {
         let startTime = new Date();  // 시작
         const chunkSize = 1024 * 1024 * 3; // 1MB
@@ -24,7 +32,7 @@
         const totalChunks = Math.ceil(file.size / chunkSize);
         let uploadFinish = 0;
         let promises = [];
-        let fileUUID = crypto.randomUUID().toString()
+        let fileUUID = generateUUID()
         for(let currentChunk =0; currentChunk<totalChunks; currentChunk++) {
             let startPartTime = new Date();  // 시작
             // chunk size 만큼 데이터 분할
@@ -79,7 +87,7 @@
         Promise.all(promises).then(
             () => {
                 console.log("모든 chunk 업로드하는데 걸린시간" + String(new Date() - startTime))
-                const eventSource = new EventSource("http://localhost:8080/api/v1/upload/videoPartLast/" + fileUUID + "/" + totalChunks.toString())
+                const eventSource = new EventSource("/api/v1/upload/videoPartLast/" + fileUUID + "/" + totalChunks.toString())
 
                 eventSource.addEventListener("ing", (event) => {
                     console.log(event.data)
@@ -89,7 +97,7 @@
                 eventSource.addEventListener("finish", (event) => {
                     console.log(event.data)
                     resultElement.textContent = "동영상 보러가기"
-                    resultElement.href = "http://localhost:8080/detail/" + event.data
+                    resultElement.href = "/detail/" + event.data
                     console.log("최종 걸린시간: " + String(new Date() - startTime));
                     eventSource.close()
                 })
@@ -97,70 +105,5 @@
 
     }
 
-
-    const sendVideoChunksOriginal = () => {
-        let startTime = new Date();  // 시작
-        const chunkSize = 1024 * 1024 * 3; // 1MB
-        const file = document.getElementById("video-file").files[0];
-        const resultElement = document.getElementById("result");
-        const title = document.getElementById("title").value
-        console.log(title)
-        // total size 계산
-        const totalChunks = Math.ceil(file.size / chunkSize);
-        let currentChunk = 0;
-
-        const generateUUID = () =>
-            ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
-                (
-                    c ^
-                    (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
-                ).toString(16)
-            );
-
-        // chunk file 전송
-        const sendNextChunk = () => {
-
-            // chunk size 만큼 데이터 분할
-            const start = currentChunk * chunkSize;
-            const end = Math.min(start + chunkSize, file.size);
-
-            const chunk = file.slice(start, end);
-
-            // form data 형식으로 전송
-            const formData = new FormData();
-            formData.append("video", chunk);
-            console.log(generateUUID())
-            const json = JSON.stringify({title : title, chunkNumber : currentChunk, totalChunk : totalChunks, fileUUID : crypto.randomUUID().toString()})
-            formData.append("videoData", new Blob([json],{type:"application/json"}) );
-
-
-            fetch("/api/v1/upload/video", {
-                method: "POST",
-                body: formData,
-                headers : {}
-            }).then(resp => {
-                // 전송 결과가 206이면 다음 파일 조각 전송
-                if (resp.status === 206) {
-                    // 진행률 표시
-                    resultElement.textContent = Math.round(currentChunk / totalChunks * 100) + "%"
-                    currentChunk++;
-                    if (currentChunk < totalChunks) {
-                        sendNextChunk();
-                    }
-                    // 마지막 파일까지 전송 되면
-                } else if (resp.status === 200) {
-                    resp.text().then(data => {
-                        console.log("최종 걸린시간: " + String(new Date() - startTime));
-                        resultElement.textContent = "동영상 보러가기"
-                        resultElement.href = "http://localhost:8080/detail/" +data
-                    });
-                }
-            }).catch(err => {
-                console.error("Error uploading video chunk");
-            });
-        };
-
-        sendNextChunk();
-    }
 </script>
 </html>

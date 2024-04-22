@@ -31,14 +31,4 @@ class DetailController(
         return "streamDetail"
     }
 
-    @ResponseBody
-    @GetMapping("/live/{key}")
-    fun getm3u8(
-        @PathVariable("key") key : String,
-    ): ResponseEntity<Any> {
-        val fileName = "index.m3u8"
-        logger.info { fileName }
-        return streamService.getTsFile(key,fileName)
-    }
-
 }

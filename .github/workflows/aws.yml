@@ -68,7 +68,7 @@ jobs:
         username: ubuntu
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          sudo cd app
+          cd app
           pwd
           ls
           pwd

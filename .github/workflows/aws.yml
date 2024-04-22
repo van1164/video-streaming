@@ -71,6 +71,7 @@ jobs:
           cd app
           sudo docker compose down
           sudo docker rm -f $(sudo docker ps -qa)
+          sudo cp -r ../video-streaming/data ./
           pwd
           ls
           pwd

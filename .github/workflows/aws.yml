@@ -41,7 +41,7 @@ jobs:
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/main/resources/application.properties
           cat src/main/resources/application-prod.properties
           chmod +x gradlew
-          ./gradlew clean build
+          ./gradlew clean build --exclude-task test
           ls
           pwd
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/streaming .

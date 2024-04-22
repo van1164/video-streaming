@@ -23,7 +23,7 @@ class RedisConfig {
 
 
     @Bean
-    fun redisConnectionFactory(): RedisConnectionFactory? {
+    fun redisConnectionFactory(): RedisConnectionFactory {
         val lettuceConnectionFactory = LettuceConnectionFactory(host, port)
         lettuceConnectionFactory.start()
         return lettuceConnectionFactory

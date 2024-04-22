@@ -2,6 +2,7 @@ package com.KY.KoreanYoutube.stream
 
 import com.KY.KoreanYoutube.domain.LiveStream
 import com.KY.KoreanYoutube.dto.StreamDTO
+import com.KY.KoreanYoutube.redis.RedisService
 import com.KY.KoreanYoutube.upload.Event
 import com.KY.KoreanYoutube.user.UserService
 import mu.KotlinLogging
@@ -37,6 +38,7 @@ class StreamService(
     private val userService: UserService,
     private val ffmpeg: FFmpeg,
     private val ffprobe: FFprobe,
+    private val redisService: RedisService
 ) {
     val logger = KotlinLogging.logger {  }
     val HLS_BASE_URL ="http://localhost:8080/api/v1/stream/ts/"
@@ -62,6 +64,7 @@ class StreamService(
     }
 
     fun startStream(key: String): Flux<ServerSentEvent<String>> {
+        redisService.saveRtmp(key)
         logger.info{"==========================startStream=========================="}
         val m3u8Path = Paths.get(File.separatorChar+"tmp",File.separatorChar + "hls", File.separatorChar + key,File.separatorChar + "index.m3u8" )
 

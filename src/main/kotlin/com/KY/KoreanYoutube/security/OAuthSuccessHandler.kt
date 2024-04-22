@@ -1,6 +1,6 @@
 package com.KY.KoreanYoutube.security
 
-import com.KY.KoreanYoutube.redis.RedisRepository
+import com.KY.KoreanYoutube.redis.RedisService
 import com.KY.KoreanYoutube.user.UserService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -15,7 +15,7 @@ val logger = KotlinLogging.logger { }
 @Component(value = "authenticationSuccessHandler")
 class OAuthSuccessHandler(
     val userService: UserService,
-    val redisRepository: RedisRepository,
+    val redisService: RedisService,
     val jwtTokenProvider: JwtTokenProvider,
 ) : AuthenticationSuccessHandler {
     override fun onAuthenticationSuccess(
@@ -32,7 +32,7 @@ class OAuthSuccessHandler(
             response.sendRedirect("http://localhost:8080/?error")
         }
         else{
-            redisRepository.save(jwt.token,user)
+            redisService.saveJwt(jwt.token,user)
             response.status = HttpServletResponse.SC_OK
             response.contentType = "application/json;charset=UTF-8"
             response.addHeader(HttpHeaders.AUTHORIZATION, jwt.token)

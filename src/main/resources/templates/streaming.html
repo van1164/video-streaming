@@ -65,7 +65,7 @@
                     console.log(data)
                     const rtmpElement = document.getElementById("rtmp");
                     const keyElement = document.getElementById("key");
-                    rtmpElement.textContent = "rtmp://localhost:1935/live"
+                    rtmpElement.textContent = "rtmp://video-share.shop:1935/live"
                     keyElement.textContent = data
                     const eventSource = new EventSource("/api/v1/stream/start_stream/" + data)
                     eventSource.addEventListener("finish", (event) => {

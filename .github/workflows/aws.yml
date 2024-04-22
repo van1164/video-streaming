@@ -70,6 +70,7 @@ jobs:
         script: |
           cd app
           sudo docker compose down
+          suod docker compose pull
           sudo docker rm -f $(sudo docker ps -qa)
           sudo cp -r ../video-streaming/data ./
           pwd

@@ -69,6 +69,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           cd app
+          sudo docker compose down
           pwd
           ls
           pwd

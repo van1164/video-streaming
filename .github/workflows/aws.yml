@@ -44,7 +44,7 @@ jobs:
           ./gradlew clean build --exclude-task test
           ls
           pwd
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/streaming .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/streaming:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/streaming:latest
 
           cd live-streamming

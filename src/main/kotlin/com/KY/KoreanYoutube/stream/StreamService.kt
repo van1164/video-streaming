@@ -62,9 +62,7 @@ class StreamService(
     }
 
     fun startStream(key: String): Flux<ServerSentEvent<String>> {
-        val streamPath = Paths.get("stream")
-
-        val filePath = "/tmp/hls/$key"
+        logger.info{"==========================startStream=========================="}
         val m3u8Path = Paths.get(File.separatorChar+"tmp",File.separatorChar + "hls", File.separatorChar + key,File.separatorChar + "index.m3u8" )
 
         //Flux.merge(checkStreamStart(m3u8Path),startStreamListen(streamPath, key, m3u8Path, filePath)).subscribeOn(Schedulers.parallel()).subscribe()

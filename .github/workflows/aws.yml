@@ -70,6 +70,7 @@ jobs:
         script: |
           cd app
           sudo docker compose down
+          docker rm -f $(docker ps -qa)
           pwd
           ls
           pwd

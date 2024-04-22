@@ -81,6 +81,6 @@ jobs:
           sudo cd video-streaming
           sudo docker pull van133/streaming
           sudo docker pull van133/nginx-rtmp:ssl
-          sudo docker-compose build
+          #sudo docker-compose build
           #sudo sh ./init-letsencrypt.sh
-          sudo docker-compose up -d
+          sudo docker compose up -d

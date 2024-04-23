@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface StreamRepository :JpaRepository<LiveStream,Long>{
     fun findByOnAirIsTrueOrderByCreateDateDesc():List<LiveStream>
+
+    fun findFirstByStreamKey(streamKey : String):LiveStream?
 }

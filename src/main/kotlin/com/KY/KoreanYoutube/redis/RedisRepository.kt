@@ -21,4 +21,8 @@ class RedisRepository(private val redisTemplate: RedisTemplate<String, String>,
         return mapper.readValue(redisTemplate.opsForValue().get(key), type)
     }
 
+    fun removeRtmp(streamKey: String): String? {
+        return redisTemplate.opsForValue().getAndDelete(streamKey)
+    }
+
 }

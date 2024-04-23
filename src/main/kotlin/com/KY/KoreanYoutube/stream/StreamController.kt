@@ -1,8 +1,10 @@
 package com.KY.KoreanYoutube.stream
 
 import com.KY.KoreanYoutube.dto.StreamDTO
+import com.KY.KoreanYoutube.redis.RedisService
 import com.KY.KoreanYoutube.security.PrincipalDetails
 import mu.KotlinLogging
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
@@ -15,7 +17,7 @@ import reactor.core.publisher.Flux
 @Controller
 @RequestMapping("/api/v1/stream")
 class StreamController(
-    val streamService: StreamService
+    val streamService: StreamService,
 ) {
     val logger = KotlinLogging.logger{}
     @GetMapping("/streamPage")
@@ -36,24 +38,10 @@ class StreamController(
     @PostMapping("/save_stream")
     fun saveStream(
         @AuthenticationPrincipal user : PrincipalDetails,
-        streamDTO : StreamDTO // 나중에 jwt로 변경 예정
+        streamDTO : StreamDTO
     ): ResponseEntity<Any> {
         return streamService.saveStream(streamDTO,user.name)
     }
-
-    @GetMapping("/stop")
-    fun streamStop(
-        @RequestParam("user_id") userId : String // 나중에 jwt로 변경 예정
-    ){
-
-    }
-
-//    @GetMapping("/live/{user_id}")
-//    fun getStream(
-//        @PathVariable("user_id") userId : String // 나중에 jwt로 변경 예정
-//    ){
-//
-//    }
 
     @ResponseBody
     @GetMapping("/live/{key}")
@@ -75,4 +63,13 @@ class StreamController(
         return streamService.getTsFile(key,fileName)
     }
 
+    @GetMapping("/verify")
+    fun verify(@RequestParam name : String): ResponseEntity<HttpStatus> {
+        return streamService.verifyStream(name)
+    }
+
+    @GetMapping("/done")
+    fun done(@RequestParam name : String): ResponseEntity<HttpStatus> {
+        return streamService.doneStream(name)
+    }
 }

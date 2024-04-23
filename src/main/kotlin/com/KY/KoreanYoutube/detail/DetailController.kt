@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.ResponseBody
 @Controller
 @RequestMapping("/detail")
 class DetailController(
-    val streamService : StreamService,
-    val videoService: VideoService
 ) {
 
     @GetMapping("/{detail_id}")

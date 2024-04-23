@@ -59,7 +59,6 @@
             body: formData,
             headers: {"Authorization": "Bearer "+jwt}
         }).then(resp => {
-            // 진행률 표시
             console.log(resp.body)
             resp.text().then(data => {
                     console.log(data)

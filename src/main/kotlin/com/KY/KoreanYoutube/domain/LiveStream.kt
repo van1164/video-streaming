@@ -29,7 +29,7 @@ data class LiveStream(
     ),
 
     @Column(name = "on_air")
-    val onAir : Boolean = true,
+    var onAir : Boolean = false,
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

@@ -35,6 +35,7 @@ class SecurityConfig(
             csrf { disable() }
             cors { }
             authorizeRequests {
+                authorize("/api/v1/stream/done", permitAll)
                 authorize("/api/v1/stream/verify", permitAll)
                 authorize("/api/v1/stream/live/**",permitAll)
                 authorize("/api/v1/stream/**",authenticated)

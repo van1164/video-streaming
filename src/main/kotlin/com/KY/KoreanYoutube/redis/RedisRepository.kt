@@ -17,6 +17,10 @@ class RedisRepository(private val redisTemplate: RedisTemplate<String, String>,
         redisTemplate.opsForValue().set(key,value, duration)
     }
 
+    fun load(key:String): String? {
+        return redisTemplate.opsForValue().get(key)
+    }
+
     fun <T> load(key : String, type : Class<T>): T? {
         return mapper.readValue(redisTemplate.opsForValue().get(key), type)
     }

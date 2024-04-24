@@ -1,6 +1,7 @@
 package com.KY.KoreanYoutube.redis
 
 import com.KY.KoreanYoutube.domain.User
+import com.KY.KoreanYoutube.utils.JWT_PREFIX
 import com.KY.KoreanYoutube.utils.RTMP_ING_PREFIX
 import com.KY.KoreanYoutube.utils.RTMP_PREFIX
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -19,7 +20,7 @@ class RedisService(
     }
 
     fun loadRtmp(streamKey: String): String? {
-        return redisRepository.load(RTMP_PREFIX + streamKey,String::class.java)
+        return redisRepository.load(RTMP_PREFIX + streamKey)
     }
 
     fun loadRtmpAndRemove(streamKey: String): String? {
@@ -28,11 +29,11 @@ class RedisService(
 
 
     fun saveJwt(jwt: String, user: User) {
-        redisRepository.save(jwt,mapper.writeValueAsString(user),Duration.ofHours(3))
+        redisRepository.save(JWT_PREFIX+jwt,mapper.writeValueAsString(user),Duration.ofHours(3))
     }
 
     fun loadByJwt(jwt: String): User? {
-        return redisRepository.load(jwt, User::class.java)
+        return redisRepository.load(JWT_PREFIX+jwt, User::class.java)
     }
 
     fun saveRtmpIng(key: String) {

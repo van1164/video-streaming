@@ -95,7 +95,7 @@ class StreamService(
         return Flux.interval(Duration.ofSeconds(1))
             .take(600)
             .map {
-                logger.info { key }
+                logger.info { redisService.loadRtmp(key) }
                 if (redisService.loadRtmp(key) ==null) {
                     logger.info { "finish" }
                     redisService.saveRtmpIng(key)
@@ -134,6 +134,7 @@ class StreamService(
     }
 
     fun verifyStream(streamKey: String) : ResponseEntity<HttpStatus> {
+        logger.info { "Verify" }
         return if(redisService.loadRtmpAndRemove(streamKey) ==null){
             ResponseEntity(BAD_REQUEST)
         } else{
@@ -144,13 +145,14 @@ class StreamService(
 
     @Transactional("transactionManager")
     fun doneStream(streamKey: String) : ResponseEntity<HttpStatus> {
+        logger.info { "Done" }
         try{
             redisService.doneRtmpIng(streamKey)
             val stream = checkNotNull(streamRepository.findFirstByStreamKey(streamKey))
             stream.onAir = false
             val user = checkNotNull(userService.findByUserId(stream.userName))
             user.onAir = false
-            return ResponseEntity(HttpStatus.OK)
+            return ResponseEntity(OK)
         } catch (e : Exception){
             return ResponseEntity(BAD_REQUEST)
         }

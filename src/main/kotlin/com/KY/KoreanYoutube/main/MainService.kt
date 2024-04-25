@@ -1,6 +1,7 @@
 package com.KY.KoreanYoutube.main
 
 import com.KY.KoreanYoutube.domain.VideoR2dbc
+import com.KY.KoreanYoutube.main
 import com.KY.KoreanYoutube.stream.StreamService
 import com.KY.KoreanYoutube.video.VideoR2DBCRepository
 import com.KY.KoreanYoutube.video.VideoRepository
@@ -17,19 +18,18 @@ class MainService(
     val videoService: VideoService,
     val streamService: StreamService
 ) {
-    fun getMainPage(): HashMap<String, Any> {
+    fun getMainPage(): Mono<HashMap<String,Any>> {
         val mainData = hashMapOf<String,Any>()
-        mainData["videoList"] = videoService.findAll(Sort.by("createDate").descending()).collectList().block()?: run{listOf<VideoR2dbc>()}
-        mainData["streamList"] = streamService.findAllOnAir()
-
-        return mainData
-//        val empty = Flux.empty<Void>()
-//        return Flux.zip(videoList,empty)
-//            .map {
-//                val hashMap = hashMapOf<Any,Any>()
-//                hashMap["videoList"] = it.t1
-//                hashMap
-//            }
-//            .toMono()
+        return videoService.findAll(Sort.by("createDate").descending()).collectList()
+            .doOnNext {
+                mainData["videoList"] = it
+            }
+            .map {
+                streamService.findAllOnAir()
+            }
+            .doOnNext {
+                mainData["streamList"] = it
+            }
+            .thenReturn(mainData)
     }
 }

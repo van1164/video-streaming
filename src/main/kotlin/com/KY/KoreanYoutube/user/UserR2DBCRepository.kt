@@ -7,5 +7,5 @@ import reactor.core.publisher.Mono
 
 @Repository
 interface UserR2DBCRepository : R2dbcRepository<UserR2dbc,Long> {
-    fun findFirstByName(name: String): Mono<UserR2dbc>
+    fun findFirstByUserId(userId: String): Mono<UserR2dbc>
 }

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 
 val logger = KotlinLogging.logger { }
 
-@Component(value = "authenticationSuccessHandler")
+@Component
 class OAuthSuccessHandler(
     val userService: UserService,
     val redisService: RedisService,

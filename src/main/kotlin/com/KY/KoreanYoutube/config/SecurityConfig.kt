@@ -1,69 +1,82 @@
 package com.KY.KoreanYoutube.config
 
 import com.KY.KoreanYoutube.security.JwtAuthenticationFilter
-import com.KY.KoreanYoutube.security.OAuthSuccessHandler
-import com.KY.KoreanYoutube.security.PrincipalOauthUserService
+import com.KY.KoreanYoutube.security_reactive.JwtAuthenticationFilterReactive
+import com.KY.KoreanYoutube.security_reactive.OAuthSuccessHandlerReactive
+import com.KY.KoreanYoutube.security_reactive.PrincipalOauthUserServiceReactive
 import mu.KotlinLogging
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Import
-import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
-import org.springframework.security.config.annotation.web.invoke
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder
+import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
-import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository
+import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver
+import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizationRequestResolver
+import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationEntryPoint
+import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher
 
 
 val log = KotlinLogging.logger{}
 
-@EnableWebSecurity
-@Import(DataSourceAutoConfiguration::class)
+
 @Configuration
+@EnableReactiveMethodSecurity
+@EnableWebFluxSecurity
 class SecurityConfig(
-    val principalOauthUserService: PrincipalOauthUserService,
-    val oAuthSuccessHandler: OAuthSuccessHandler,
-    val jwtAuthenticationFilter: JwtAuthenticationFilter
+    val principalOauthUserService: PrincipalOauthUserServiceReactive,
+    val oAuthSuccessHandler: OAuthSuccessHandlerReactive,
+    val jwtAuthenticationFilter: JwtAuthenticationFilterReactive,
+    val clientRegistrationRepository: ReactiveClientRegistrationRepository
 ) {
     @Bean
-    fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        http { // kotlin DSL
-            httpBasic { disable() }
-            csrf { disable() }
-            cors { }
-            authorizeRequests {
-                authorize("/api/v1/stream/done", permitAll)
-                authorize("/api/v1/stream/verify", permitAll)
-                authorize("/api/v1/stream/live/**",permitAll)
-                authorize("/api/v1/stream/**",authenticated)
-                authorize("/api/v1/upload/**",authenticated)
-                authorize("/**",permitAll)
+    fun filterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
+        http.httpBasic {
+            it.disable()
             }
-            oauth2Login {
-                loginPage = "/loginPage"
-                defaultSuccessUrl("/",true)
-                userInfoEndpoint {
-                    userService = principalOauthUserService
-                }
-                authenticationSuccessHandler = oAuthSuccessHandler
+            .csrf {
+                it.disable()
             }
-
-            exceptionHandling {
-                //authenticationEntryPoint = serverAuthenticationEntryPoint()
+            .authorizeExchange{
+                it.pathMatchers("/api/v1/stream/done").permitAll()
+                it.pathMatchers("/api/v1/stream/verify").permitAll()
+                it.pathMatchers("/api/v1/stream/live/**") .permitAll()
+                it.pathMatchers("/api/v1/stream/**").authenticated()
+                it.pathMatchers("/api/v1/upload/**").authenticated()
+                it.pathMatchers("/**").permitAll()
             }
-            addFilterBefore<UsernamePasswordAuthenticationFilter>(jwtAuthenticationFilter)
-
-
-        }
+            .exceptionHandling{
+                it.authenticationEntryPoint(RedirectServerAuthenticationEntryPoint("/loginPage"))
+            }
+            .oauth2Login {
+                it.authenticationSuccessHandler(oAuthSuccessHandler)
+                it.authorizationRequestResolver(authorizationRequestResolver())
+            }
+            .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
         return http.build()
     }
     @Bean
     fun passwordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder()
     }
+
+    private fun authorizationRequestResolver(): ServerOAuth2AuthorizationRequestResolver {
+        val authorizationRequestMatcher: ServerWebExchangeMatcher = PathPatternParserServerWebExchangeMatcher(
+            "/oauth2/authorization/{registrationId}"
+        )
+
+        return DefaultServerOAuth2AuthorizationRequestResolver(
+            clientRegistrationRepository, authorizationRequestMatcher
+        )
+    }
+
+
 //    private fun serverAuthenticationEntryPoint(): AuthenticationEntryPoint? {
 //        return AuthenticationEntryPoint { request,response, authEx: AuthenticationException ->
 //            val requestPath = request.pathInfo

@@ -1,9 +1,9 @@
 package com.KY.KoreanYoutube.stream
 
 import com.KY.KoreanYoutube.domain.LiveStream
+import com.KY.KoreanYoutube.dto.EventDTO
 import com.KY.KoreanYoutube.dto.StreamDTO
 import com.KY.KoreanYoutube.redis.RedisService
-import com.KY.KoreanYoutube.upload.Event
 import com.KY.KoreanYoutube.user.UserService
 import mu.KotlinLogging
 import net.bramp.ffmpeg.FFmpeg
@@ -45,7 +45,7 @@ class StreamService(
     val logger = KotlinLogging.logger {  }
     val HLS_BASE_URL ="http://localhost:8080/api/v1/stream/ts/"
 
-    val sink = Sinks.many().multicast().onBackpressureBuffer<Event>()
+    val sink = Sinks.many().multicast().onBackpressureBuffer<EventDTO>()
 
     @Transactional(value = "transactionManager")
     fun saveStream(streamDTO: StreamDTO,userId: String): ResponseEntity<Any> {
@@ -78,9 +78,6 @@ class StreamService(
             }
             .subscribe()
 
-//        logger.info{"==========================startStream=========================="}
-//        val m3u8Path = Paths.get(File.separatorChar+"tmp",File.separatorChar + "hls", File.separatorChar + key,File.separatorChar + "index.m3u8" )
-
 
         logger.info { "middle point" }
         return sink.asFlux().map { event ->
@@ -99,7 +96,7 @@ class StreamService(
                 if (redisService.loadRtmp(key) ==null) {
                     logger.info { "finish" }
                     redisService.saveRtmpIng(key)
-                    sink.tryEmitNext(Event("finish", "finish"))
+                    sink.tryEmitNext(EventDTO("finish", "finish"))
                     return@map true
                 }
                 else{
@@ -111,7 +108,6 @@ class StreamService(
 
 
     fun getTsFile(key: String, fileName: String): ResponseEntity<Any> {
-        //val path = Paths.get("stream",File.separatorChar + key, File.separatorChar + fileName)
         val path = Paths.get(File.separatorChar+"tmp",File.separatorChar + "hls", File.separatorChar + key,File.separatorChar + fileName )
         println(path.toString())
 
@@ -136,9 +132,9 @@ class StreamService(
     fun verifyStream(streamKey: String) : ResponseEntity<HttpStatus> {
         logger.info { "Verify" }
         return if(redisService.loadRtmpAndRemove(streamKey) ==null){
-            ResponseEntity(BAD_REQUEST)
+            ResponseEntity.badRequest().build()
         } else{
-            ResponseEntity(OK)
+            ResponseEntity.ok().build()
         }
     }
 
@@ -152,9 +148,9 @@ class StreamService(
             stream.onAir = false
             val user = checkNotNull(userService.findByUserId(stream.userName))
             user.onAir = false
-            return ResponseEntity(OK)
+            return ResponseEntity.ok().build()
         } catch (e : Exception){
-            return ResponseEntity(BAD_REQUEST)
+            return ResponseEntity.badRequest().build()
         }
     }
 

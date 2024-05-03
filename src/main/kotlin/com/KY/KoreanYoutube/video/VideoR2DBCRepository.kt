@@ -1,6 +1,5 @@
 package com.KY.KoreanYoutube.video
 
-import com.KY.KoreanYoutube.domain.Video
 import com.KY.KoreanYoutube.domain.VideoR2dbc
 import org.springframework.data.r2dbc.repository.R2dbcRepository
 import org.springframework.stereotype.Repository

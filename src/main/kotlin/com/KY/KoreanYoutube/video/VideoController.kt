@@ -1,7 +1,6 @@
-package com.KY.KoreanYoutube.upload
+package com.KY.KoreanYoutube.video
 
 import com.KY.KoreanYoutube.config.log
-import com.KY.KoreanYoutube.domain.VideoR2dbc
 import com.KY.KoreanYoutube.dto.UploadVideoDataDTO
 import com.KY.KoreanYoutube.dto.UploadVideoPartDTO
 import com.KY.KoreanYoutube.security.PrincipalDetails
@@ -12,7 +11,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
@@ -22,8 +20,8 @@ import reactor.core.publisher.Mono
 
 @Controller
 @RequestMapping("/api/v1/upload")
-class UploadController(
-    val uploadService: UploadService,
+class VideoController(
+    val videoService: VideoService,
     val userService: UserService
 ) {
 
@@ -37,7 +35,7 @@ class UploadController(
             fileUUID : String): Mono<ResponseEntity<HttpStatus>> {
 
         val videoData = UploadVideoPartDTO(title,chunkNumber,totalChunk,fileUUID)
-        return uploadService.uploadVideoPart(video, videoData)
+        return videoService.uploadVideoPart(video, videoData)
 
 
     }
@@ -47,7 +45,7 @@ class UploadController(
         @PathVariable id : String,
         @PathVariable totalChunk: Int,
      ): Flux<ServerSentEvent<String>> {
-        return uploadService.uploadVideoPartLast(id,totalChunk)
+        return videoService.uploadVideoPartLast(id,totalChunk)
     }
 
 
@@ -61,7 +59,7 @@ class UploadController(
         log.info { uploadVideoDataDTO.title }
         log.info { uploadVideoDataDTO.fileUUID }
         log.info { "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" }
-        return uploadService.saveVideoData(uploadVideoDataDTO.title,uploadVideoDataDTO.fileUUID,user.name)
+        return videoService.saveVideoData(uploadVideoDataDTO.title,uploadVideoDataDTO.fileUUID,user.name)
     }
 
     //@PreAuthorize("isAuthenticated()")

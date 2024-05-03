@@ -1,17 +1,15 @@
-package com.KY.KoreanYoutube.upload
+package com.KY.KoreanYoutube.s3
 
+import com.KY.KoreanYoutube.security.logger
 import com.KY.KoreanYoutube.utils.FileUtils
 import com.KY.KoreanYoutube.utils.S3Utils
-import com.amazonaws.services.s3.model.*
-import mu.KotlinLogging
-import org.springframework.stereotype.Repository
+import com.amazonaws.services.s3.model.AmazonS3Exception
+import org.springframework.stereotype.Component
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 
-private val logger = KotlinLogging.logger {} // KotlinLogging 사용
-
-@Repository
-class S3Repository(
+@Component
+class S3UploadComponent(
     val fileUtils: FileUtils,
     val s3Utils: S3Utils
 ) {

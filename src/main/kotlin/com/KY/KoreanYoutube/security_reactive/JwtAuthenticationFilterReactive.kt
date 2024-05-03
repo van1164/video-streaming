@@ -28,7 +28,6 @@ class JwtAuthenticationFilterReactive(
 
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         logger.info {"jwt 필터"}
-        val a =exchange.request
         val token = resolveToken(exchange.request)
         if (token != null && jwtTokenProvider.validateToken(token)) {
             val authentication = jwtTokenProvider.getAuthentication(token)

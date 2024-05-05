@@ -1,14 +1,13 @@
-package com.KY.KoreanYoutube.video
-
-import com.KY.KoreanYoutube.dto.UploadVideoDataDTO
-import com.KY.KoreanYoutube.dto.UploadVideoPartDTO
-import com.KY.KoreanYoutube.security.PrincipalDetails
-import com.KY.KoreanYoutube.user.UserService
+package com.van1164.video
+import com.van1164.security.PrincipalDetails
+import com.van1164.common.util.Utils.logger
+import com.van1164.common.dto.UploadVideoDataDTO
+import com.van1164.common.dto.UploadVideoPartDTO
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
-import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.http.codec.multipart.FilePart
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
@@ -16,33 +15,51 @@ import org.springframework.web.multipart.MultipartFile
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
-
 @Controller
 @RequestMapping("/api/v1/upload")
 class VideoController(
     val videoService: VideoService,
-    val userService: UserService
 ) {
+
 
     @PostMapping("/test")
     //@PreAuthorize("isAuthenticated()")
     @ResponseBody
-    fun testVideo(@RequestPart(name = "video") video: MultipartFile,
-                  title : String)
-    : Mono<String> {
-        return Mono.just(title)
+    fun testVideo(
+        @RequestPart(value = "video") video: MultipartFile,
+        @RequestPart(value = "data") dto: UploadVideoPartDTO,
+    ): Mono<UploadVideoPartDTO> {
+        return Mono.just(dto)
     }
 
     @PostMapping("/videoPart")
-    @PreAuthorize("isAuthenticated()")
-    fun uploadVideoPart(@RequestPart(name = "video") video: MultipartFile,
-            title : String,
-            chunkNumber : Int,
-            totalChunk : Int,
-            fileUUID : String): Mono<ResponseEntity<HttpStatus>> {
+    //@PreAuthorize("isAuthenticated()")
+    fun uploadVideoPart(
+        @RequestPart video: FilePart,
+        @RequestPart title : String,
+        @RequestPart chunkNumber : String,
+        @RequestPart totalChunk : String,
+        @RequestPart fileUUID : String): Mono<ResponseEntity<HttpStatus>> {
+        println("FFFFFFFFFFFFFFFFFFFFFFFF$chunkNumber")
+        logger.info { "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" }
+        return Mono.just(UploadVideoPartDTO(title,chunkNumber.toInt(),totalChunk.toInt(),fileUUID))
+            .doOnNext {
+                logger.info{ "여기에 있어요!!!"}
+                logger.info { video.filename() }
+            }
+            .flatMap {videoData->
+                videoService.uploadVideoPart(video, videoData)
+            }
+            .doOnError {
+                logger.error { "에러" }
+            }
+            .onErrorReturn (
+                ResponseEntity.badRequest().build()
+                )
+//        val videoData = UploadVideoPartDTO(title,chunkNumber,totalChunk,fileUUID)
+//        return videoService.uploadVideoPart(video, videoData)
 
-        val videoData = UploadVideoPartDTO(title,chunkNumber,totalChunk,fileUUID)
-        return videoService.uploadVideoPart(video, videoData)
+
     }
     @ResponseBody
     @GetMapping("/videoPartLast/{id}/{totalChunk}", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
@@ -68,8 +85,9 @@ class VideoController(
     }
 
     //@PreAuthorize("isAuthenticated()")
-    @RequestMapping("/uploadPage")
+    @GetMapping("/uploadPage")
     fun uploadPage() : Mono<String> {
+        logger.info { "업로드 페이지" }
         return Mono.just("uploadPage")
     }
 

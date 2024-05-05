@@ -1,12 +1,11 @@
-package com.KY.KoreanYoutube.video
+package com.van1164.video
 
-import com.KY.KoreanYoutube.domain.VideoR2dbc
-import com.KY.KoreanYoutube.dto.EventDTO
-import com.KY.KoreanYoutube.dto.UploadVideoPartDTO
-import com.KY.KoreanYoutube.s3.S3UploadComponent
-import com.KY.KoreanYoutube.utils.s3URL
+import com.van1164.common.domain.VideoR2dbc
+import com.van1164.common.dto.EventDTO
+import com.van1164.common.dto.UploadVideoPartDTO
+import com.van1164.common.util.Utils.logger
+import com.van1164.util.s3URL
 import kotlinx.coroutines.*
-import mu.KotlinLogging
 import net.bramp.ffmpeg.FFmpeg
 import net.bramp.ffmpeg.FFmpegExecutor
 import net.bramp.ffmpeg.FFprobe
@@ -19,11 +18,12 @@ import org.springframework.http.codec.ServerSentEvent
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.util.StopWatch
-import org.springframework.web.multipart.MultipartFile
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Sinks
 import reactor.core.scheduler.Schedulers
+import com.van1164.common.s3.S3UploadComponent
+import org.springframework.http.codec.multipart.FilePart
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -31,10 +31,6 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.*
 import java.util.concurrent.CompletableFuture
-
-val logger = KotlinLogging.logger {} // KotlinLogging 사용
-
-
 
 @Service
 class VideoService(
@@ -47,7 +43,7 @@ class VideoService(
 ) {
 
     val sink = Sinks.many().multicast().onBackpressureBuffer<EventDTO>()
-    @Transactional("connectionFactoryTransactionManager")
+    @Transactional
     fun uploadVideoPartLast(fileUUID : String, totalChunk : Int): Flux<ServerSentEvent<String>> {
         val stopWatch = StopWatch()
         val inputFilePath = Paths.get(UUID.randomUUID().toString() + ".mp4")
@@ -176,11 +172,11 @@ class VideoService(
         println(stopWatch.prettyPrint())
     }
 
-    @Transactional("connectionFactoryTransactionManager")
+    @Transactional
     fun saveThumbnailData(fileUUID : String,thumbNailUrl : String): Mono<VideoR2dbc> {
         return videoRepository.findFirstByUrl(fileUUID)
             .doOnNext {
-                it.thumbNailUrl =s3URL+"thumb/"+ thumbNailUrl
+                it.thumbNailUrl = s3URL +"thumb/"+ thumbNailUrl
             }
             .flatMap{
                 videoRepository.save(it)
@@ -210,10 +206,10 @@ class VideoService(
         CompletableFuture.allOf(*futures.toTypedArray()).get()
     }
 
-    fun uploadVideoPart(video: MultipartFile, videoData: UploadVideoPartDTO): Mono<ResponseEntity<HttpStatus>> {
-        return Mono.just(
-            s3Repository.uploadVideoPart(video, videoData.chunkNumber,videoData.fileUUID)
-        ).map{
+    fun uploadVideoPart(video: FilePart, videoData: UploadVideoPartDTO): Mono<ResponseEntity<HttpStatus>> {
+        logger.info { videoData.chunkNumber }
+        return s3Repository.uploadVideoPart(video, videoData.chunkNumber,videoData.fileUUID)
+        .map{
             if(it){
                 ResponseEntity<HttpStatus>(HttpStatus.OK)
             }
@@ -223,7 +219,7 @@ class VideoService(
         }.subscribeOn(Schedulers.boundedElastic())
 
     }
-    @Transactional("connectionFactoryTransactionManager")
+    @Transactional
     fun saveVideoData(
         title: String,
         fileUUID: String,

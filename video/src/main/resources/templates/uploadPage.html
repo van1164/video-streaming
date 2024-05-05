@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<input id="video-file" type="file" name="file">
+<label for="title">제목</label><input id="title" type="text" name="title">
+<button onclick="return sendVideoChunks()">업로드</button>
+<a id="result"></a>
+
+</body>
+<script>
+    let jwt = localStorage.getItem("jwt")
+
+    const generateUUID = () =>
+        ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+            (
+                c ^
+                (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
+            ).toString(16)
+        );
+    const sendVideoChunks = () => {
+        let startTime = new Date();  // 시작
+        const chunkSize = 1024 * 1024 * 3; // 1MB
+        const file = document.getElementById("video-file").files[0];
+        const resultElement = document.getElementById("result");
+        const title = document.getElementById("title").value
+        // total size 계산
+        const totalChunks = Math.ceil(file.size / chunkSize);
+        let uploadFinish = 0;
+        let promises = [];
+        let fileUUID = generateUUID()
+        for(let currentChunk =0; currentChunk<totalChunks; currentChunk++) {
+            let startPartTime = new Date();  // 시작
+            // chunk size 만큼 데이터 분할
+            const start = currentChunk * chunkSize;
+            const end = Math.min(start + chunkSize, file.size);
+
+            const chunk = file.slice(start, end);
+            console.log(currentChunk,totalChunks)
+            // form data 형식으로 전송
+            const formData = new FormData();
+            formData.append("video", chunk);
+            //const json = JSON.stringify({title : title, chunkNumber : currentChunk, totalChunk : totalChunks, fileUUID : fileUUID})
+            formData.append("title",title)
+            formData.append("chunkNumber",currentChunk.toString())
+            formData.append("totalChunk",totalChunks.toString())
+            formData.append("fileUUID",fileUUID)
+            //formData.append("videoData", new Blob([json], {type: "application/json"}));
+            let promise = fetch("/api/v1/upload/videoPart", {
+                method: "POST",
+                body: formData,
+                headers: {"Authorization": "Bearer "+jwt}
+            }).then(resp => {
+                // 진행률 표시
+                uploadFinish++;
+                resultElement.textContent = Math.round(uploadFinish / totalChunks * 100) + "%"
+                let endPart = new Date();  // 종료
+                console.log("chunk" + String(currentChunk) + ":" + String(endPart - startPartTime));
+
+            }).catch(err => {
+                console.error("Error uploading video chunk");
+            });
+
+            promises.push(promise)
+        }
+
+        promises.push(
+            fetch("/api/v1/upload/saveVideoData", {
+                method: "POST",
+                body: JSON.stringify({'title':title.toString(),'fileUUID':fileUUID}),
+                headers: {'Authorization': 'Bearer '+jwt, "Content-Type": "application/json"}
+            }).then(resp => {
+                if(resp.status!==200){
+                    alert("업로드 중 오류 발생")
+                    return ;
+                }
+            }).catch(err => {
+                console.error("Error uploading video chunk");
+            })
+        )
+
+
+        Promise.all(promises).then(
+            () => {
+                console.log("모든 chunk 업로드하는데 걸린시간" + String(new Date() - startTime))
+                const eventSource = new EventSource("/api/v1/upload/videoPartLast/" + fileUUID + "/" + totalChunks.toString())
+
+                eventSource.addEventListener("ing", (event) => {
+                    console.log(event.data)
+                    resultElement.textContent = event.data
+                })
+
+                eventSource.addEventListener("finish", (event) => {
+                    console.log(event.data)
+                    resultElement.textContent = "동영상 보러가기"
+                    resultElement.href = "/detail/" + event.data
+                    console.log("최종 걸린시간: " + String(new Date() - startTime));
+                    eventSource.close()
+                })
+            })
+
+    }
+
+</script>
+</html>

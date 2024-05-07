@@ -10,7 +10,9 @@ import org.springframework.http.codec.multipart.FilePart
 import org.springframework.stereotype.Component
 import org.springframework.web.multipart.MultipartFile
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.toMono
 import java.io.File
+import java.io.FileInputStream
 import java.io.InputStream
 
 @Component(value = "s3Utils")
@@ -59,6 +61,29 @@ class S3Utils(
             request.requestClientOptions.readLimit = 80000
             request
             }
+            .doOnNext {request->
+                amazonS3.putObject(request)
+            }
+            .map {
+                true
+            }
+    }
+
+    fun put(
+        key: String,
+        videoInputStream: FileInputStream
+    ): Mono<Boolean> {
+        return videoInputStream.toMono()
+            .map {
+            val request = PutObjectRequest(
+                bucketName,
+                key,
+                videoInputStream,
+                ObjectMetadata()
+            )
+            request.requestClientOptions.readLimit = 80000
+            request
+        }
             .doOnNext {request->
                 amazonS3.putObject(request)
             }

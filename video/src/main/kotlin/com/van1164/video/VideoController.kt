@@ -40,26 +40,13 @@ class VideoController(
         @RequestPart chunkNumber : String,
         @RequestPart totalChunk : String,
         @RequestPart fileUUID : String): Mono<ResponseEntity<HttpStatus>> {
-        println("FFFFFFFFFFFFFFFFFFFFFFFF$chunkNumber")
-        logger.info { "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" }
         return Mono.just(UploadVideoPartDTO(title,chunkNumber.toInt(),totalChunk.toInt(),fileUUID))
-            .doOnNext {
-                logger.info{ "여기에 있어요!!!"}
-                logger.info { video.filename() }
-            }
             .flatMap {videoData->
                 videoService.uploadVideoPart(video, videoData)
-            }
-            .doOnError {
-                logger.error { "에러" }
             }
             .onErrorReturn (
                 ResponseEntity.badRequest().build()
                 )
-//        val videoData = UploadVideoPartDTO(title,chunkNumber,totalChunk,fileUUID)
-//        return videoService.uploadVideoPart(video, videoData)
-
-
     }
     @ResponseBody
     @GetMapping("/videoPartLast/{id}/{totalChunk}", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
@@ -77,17 +64,12 @@ class VideoController(
         @AuthenticationPrincipal user : PrincipalDetails,
         @RequestBody  uploadVideoDataDTO: UploadVideoDataDTO
     ): Mono<ResponseEntity<HttpStatus>> {
-        println(user)
-        logger.info { uploadVideoDataDTO.title }
-        logger.info { uploadVideoDataDTO.fileUUID }
-        logger.info { "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" }
         return videoService.saveVideoData(uploadVideoDataDTO.title,uploadVideoDataDTO.fileUUID,user.name)
     }
 
     //@PreAuthorize("isAuthenticated()")
     @GetMapping("/uploadPage")
     fun uploadPage() : Mono<String> {
-        logger.info { "업로드 페이지" }
         return Mono.just("uploadPage")
     }
 

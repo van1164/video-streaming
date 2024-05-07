@@ -9,6 +9,7 @@ import org.springframework.core.io.buffer.DataBufferUtils
 import org.springframework.http.codec.multipart.FilePart
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.toMono
 import java.io.File
 
 @Component
@@ -57,17 +58,25 @@ class S3UploadComponent(
         s3Utils.delete("$videoUUID.part$i")
     }
 
-    fun uploadM3U8(m3u8Path: String, outputUUID: String) {
+    fun uploadM3U8(m3u8Path: String, outputUUID: String): Mono<File> {
         println("Upload M3U8")
-        val m3u8File = File(m3u8Path)
-        s3Utils.put(key = "$outputUUID/$m3u8Path", file = m3u8File)
-        fileUtils.delete(m3u8File)
+        return File(m3u8Path).toMono()
+            .doOnNext { m3U8File ->
+                s3Utils.put(key = "$outputUUID/$m3u8Path",file=m3U8File)
+            }
+            .doOnNext {m3U8File ->
+                fileUtils.delete(m3U8File)
+            }
+
     }
 
-    fun uploadThumbnail(thumbNailPath: String) {
-        val thumbNailFile = File(thumbNailPath)
-        s3Utils.put("thumb/$thumbNailPath", thumbNailFile)
-        fileUtils.delete(thumbNailFile)
+    fun uploadThumbnail(thumbNailPath: String): Mono<File> {
+        return File(thumbNailPath).toMono()
+            .doOnNext { thumbNailFile ->
+                s3Utils.put("thumb/$thumbNailPath", thumbNailFile)
+            }.doOnNext{thumbNailFile->
+                fileUtils.delete(thumbNailFile)
+            }
     }
 
 

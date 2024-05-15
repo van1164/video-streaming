@@ -1,0 +1,21 @@
+package com.van1164.main.video
+
+import com.van1164.common.domain.VideoR2dbc
+import org.springframework.data.domain.Sort
+import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import reactor.core.publisher.Flux
+
+
+@Service
+@EnableR2dbcRepositories(basePackageClasses = [VideoReadRepository::class])
+class VideoReadService(
+    val videoRepository: VideoReadRepository
+) {
+
+    @Transactional(readOnly = true)
+    fun findAllSortByDescending(): Flux<VideoR2dbc> {
+        return videoRepository.findAll(Sort.by("createDate").descending())
+    }
+}

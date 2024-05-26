@@ -1,22 +1,19 @@
-package com.van1164.common.domain
-
+package com.van1164.common.dto
 
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.Id
 import java.time.LocalDateTime
 
-
-data class Comment(
-
+data class CommentDTO(
     val message : String,
 
     val userName : String,
 
     val videoId: Long,
 
-    @CreatedDate
-    val createdDate : LocalDateTime = LocalDateTime.now(),
+    val createdDate : LocalDateTime,
 
-    @Id
-    val id : Long? = null
+    val id : Long,
+    val good : Int,
+    val bad : Int
 )

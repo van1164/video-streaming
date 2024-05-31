@@ -1,9 +1,7 @@
 package com.van1164.security.config
 
 
-import com.van1164.security.JwtAuthenticationFilterReactive
-import com.van1164.security.OAuthSuccessHandlerReactive
-import com.van1164.security.PrincipalOauthUserServiceReactive
+import com.van1164.security.*
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
@@ -17,6 +15,7 @@ import org.springframework.security.oauth2.client.registration.ReactiveClientReg
 import org.springframework.security.oauth2.client.web.server.DefaultServerOAuth2AuthorizationRequestResolver
 import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizationRequestResolver
 import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.security.web.server.authentication.AuthenticationWebFilter
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationEntryPoint
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher
@@ -26,11 +25,17 @@ import org.springframework.security.web.server.util.matcher.ServerWebExchangeMat
 @EnableWebFluxSecurity
 @ComponentScan(basePackages = ["com.van1164.user","com.van1164.common"])
 class SecurityConfig(
-    val principalOauthUserService: PrincipalOauthUserServiceReactive,
     val oAuthSuccessHandler: OAuthSuccessHandlerReactive,
     val jwtAuthenticationFilter: JwtAuthenticationFilterReactive,
-    val clientRegistrationRepository: ReactiveClientRegistrationRepository
+    val clientRegistrationRepository: ReactiveClientRegistrationRepository,
+    val authenticationEntryPoint: CustomAuthenticationEntryPoint,
+    authManager : JwtAuthenticationManager,
+    converter: JwtServerAuthenticationConverter
 ) {
+    val filter = AuthenticationWebFilter(authManager).apply{
+        this.setServerAuthenticationConverter(converter)
+    }
+
     @Bean
     fun filterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         http.httpBasic {
@@ -40,6 +45,7 @@ class SecurityConfig(
                 it.disable()
             }
             .authorizeExchange{
+                it.pathMatchers("/api/v1/comment/").permitAll()
                 it.pathMatchers("/api/v1/stream/done").permitAll()
                 it.pathMatchers("/api/v1/stream/verify").permitAll()
                 it.pathMatchers("/api/v1/stream/live/**") .permitAll()
@@ -50,13 +56,13 @@ class SecurityConfig(
                 it.pathMatchers("/**").permitAll()
             }
             .exceptionHandling{
-                it.authenticationEntryPoint(RedirectServerAuthenticationEntryPoint("/loginPage"))
+                it.authenticationEntryPoint(authenticationEntryPoint)
             }
             .oauth2Login {
                 it.authenticationSuccessHandler(oAuthSuccessHandler)
                 it.authorizationRequestResolver(authorizationRequestResolver())
             }
-            .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+            .addFilterBefore(filter, SecurityWebFiltersOrder.AUTHENTICATION)
         return http.build()
     }
     @Bean

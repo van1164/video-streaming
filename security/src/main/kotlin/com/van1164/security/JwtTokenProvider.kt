@@ -2,6 +2,8 @@ package com.van1164.security
 
 import com.nimbusds.oauth2.sdk.Role
 import com.van1164.common.redis.RedisService
+import com.van1164.user.UserService
+import com.van1164.util.JWT_PREFIX
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
@@ -16,6 +18,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Mono
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
@@ -24,7 +27,8 @@ import kotlin.collections.LinkedHashMap
 class JwtTokenProvider(
     @Value("\${jwt.secret}")
     private var secretKey: String,
-    private val redisService: RedisService
+    private val redisService: RedisService,
+    private val userService: UserService
 ) {
 
     val EXPIRATION_MILLISECONDS: Long = 10000 * 60 * 30
@@ -33,7 +37,6 @@ class JwtTokenProvider(
 
     fun createToken(email: String): TokenInfo {
         val claims = Jwts.claims().apply {
-            subject = email
             put("roles", Role.entries)
         }
         val now = Date()
@@ -42,6 +45,7 @@ class JwtTokenProvider(
         val accessToken = Jwts
             .builder()
             .claim("auth", claims)
+            .setSubject(email)
             .setIssuedAt(now)
             .setExpiration(accessExpiration)
             .signWith(key, SignatureAlgorithm.HS256)
@@ -50,24 +54,31 @@ class JwtTokenProvider(
         return TokenInfo("Bearer", accessToken)
     }
 
-    fun getAuthentication(token: String): Authentication {
+    fun getAuthentication(token: String): Mono<UsernamePasswordAuthenticationToken> {
         val claims = getClaims(token)
+        println("TTTTTTTTTTTTTTTTT")
+        println(claims.subject)
+        println(claims.entries)
+        println("XXXXXXXXXXXXXXXXXXX")
         val auth = claims["auth"] ?: throw RuntimeException("잘못된 토큰입니다.")
-        val email = (auth as LinkedHashMap<*, *>)["sub"] as String
+        val userId = claims.subject
         val authorities: Collection<GrantedAuthority> = (auth.toString())
             .split(",")
             .map { SimpleGrantedAuthority(it) }
 
-        val principal: UserDetails = User(email, "", authorities)
-        println(principal)
-        println(email)  //redis에서 토큰 있는지도 한번 더 체크 구현해야함
-        return UsernamePasswordAuthenticationToken(principal, "", authorities)
+       return userService.findByUserId(userId)
+           .map{
+               PrincipalDetails(it)
+           }
+           .map{principal->
+               UsernamePasswordAuthenticationToken(principal,"",authorities)
+           }
     }
 
     fun validateToken(token: String): Boolean {
         try {
             getClaims(token)
-            redisService.loadByJwt(token)?.run{return false}
+            redisService.loadByJwt(token)?: return false
             return true
         } catch (e: Exception) {
             println(e.message)

@@ -13,6 +13,7 @@ version = "0.0.1-SNAPSHOT"
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 }
 
 configurations {
@@ -66,6 +67,79 @@ dependencies {
 
 	testImplementation("io.projectreactor:reactor-test:3.6.5")
 
+	// kotest
+	testImplementation("io.kotest:kotest-runner-junit5:5.4.2")
+	testImplementation("io.kotest:kotest-assertions-core:5.4.2")
+	testImplementation("io.kotest.extensions:kotest-extensions-spring:1.1.2")
+
+	// mockk
+	testImplementation("io.mockk:mockk:1.13.8")
+
+}
+
+subprojects {
+	group = "com.KY"
+	version = "0.0.1-SNAPSHOT"
+
+
+	apply(plugin = "org.springframework.boot")
+	apply(plugin = "io.spring.dependency-management")
+	apply(plugin = "org.jetbrains.kotlin.jvm")
+	apply(plugin = "org.jetbrains.kotlin.plugin.spring")
+	apply(plugin = "org.jetbrains.kotlin.plugin.jpa")
+
+	dependencies {
+		implementation("org.jetbrains.kotlin:kotlin-reflect")
+		implementation("org.springframework.boot:spring-boot-starter-webflux")
+		implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+		implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
+		implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+		compileOnly("org.projectlombok:lombok")
+		runtimeOnly("com.mysql:mysql-connector-j")
+		annotationProcessor("org.projectlombok:lombok")
+		testImplementation("org.springframework.boot:spring-boot-starter-test")
+		testImplementation("io.projectreactor:reactor-test")
+		implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
+		implementation("com.github.jasync-sql:jasync-r2dbc-mysql:2.2.0")
+		implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
+
+		implementation("io.github.microutils:kotlin-logging:1.12.0")
+
+		//security
+		implementation("org.springframework.boot:spring-boot-starter-security")
+		testImplementation("org.springframework.security:spring-security-test")
+
+		//oAuth2
+		implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+		implementation("org.springframework.boot:spring-boot-starter-oauth2-authorization-server")
+
+		//thymleaf
+		implementation("org.springframework.boot:spring-boot-starter-thymeleaf:3.2.3")
+
+		//swagger
+		implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0")
+		implementation("org.springdoc:springdoc-openapi-starter-webflux-api:2.5.0")
+
+		//
+	}
+
+	configurations {
+		compileOnly {
+			extendsFrom(configurations.annotationProcessor.get())
+		}
+	}
+	java {
+		sourceCompatibility = JavaVersion.VERSION_17
+		targetCompatibility = JavaVersion.VERSION_17
+	}
+
+	tasks.withType<KotlinCompile> {
+		kotlinOptions {
+			freeCompilerArgs += "-Xjsr305=strict"
+			jvmTarget = "17"
+		}
+	}
+
 }
 
 tasks.withType<KotlinCompile> {
@@ -78,3 +152,4 @@ tasks.withType<KotlinCompile> {
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+

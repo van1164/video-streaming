@@ -13,6 +13,8 @@ dependencies {
     implementation(project(":util"))
     implementation(project(":user"))
     implementation(project(":security"))
+    implementation(project(":main"))
+    implementation(project(":comment"))
 }
 
 tasks.test {

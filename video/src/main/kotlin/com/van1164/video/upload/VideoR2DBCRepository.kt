@@ -1,4 +1,4 @@
-package com.van1164.video
+package com.van1164.video.upload
 
 import com.van1164.common.domain.VideoR2dbc
 import org.springframework.data.r2dbc.repository.R2dbcRepository

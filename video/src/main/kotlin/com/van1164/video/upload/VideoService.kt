@@ -1,4 +1,4 @@
-package com.van1164.video
+package com.van1164.video.upload
 
 import com.van1164.common.domain.VideoR2dbc
 import com.van1164.common.dto.EventDTO
@@ -12,12 +12,10 @@ import net.bramp.ffmpeg.FFprobe
 import net.bramp.ffmpeg.builder.FFmpegBuilder
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.util.StopWatch
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Sinks
@@ -71,6 +69,7 @@ class VideoService(
                 .subscribeOn(Schedulers.parallel())
                 .doFirst { sink.tryEmitNext(EventDTO("ing","파일 변환 처리중...")) }
 
+
         Flux.concat(videoFlux,Flux.merge(deleteChunkFileFlux,thumbNailFlux,mp4ToHlsFlux))
             .doOnComplete {
                 sink.tryEmitNext(EventDTO("finish",fileUUID))
@@ -80,7 +79,7 @@ class VideoService(
             ServerSentEvent.builder<String>(event.message)
                 .event(event.event)
                 .build()
-        }
+            }
 
 
     }
@@ -182,14 +181,14 @@ class VideoService(
 
     }
 
-    fun uploadVideoPart(video: FilePart, videoData: UploadVideoPartDTO): Mono<ResponseEntity<HttpStatus>> {
+    fun uploadVideoPart(video: FilePart, videoData: UploadVideoPartDTO): Mono<ResponseEntity<Boolean>> {
         return s3Repository.uploadVideoPart(video, videoData.chunkNumber,videoData.fileUUID)
         .map{
             if(it){
-                ResponseEntity<HttpStatus>(HttpStatus.OK)
+                ResponseEntity.ok(it)
             }
             else {
-                ResponseEntity<HttpStatus>(HttpStatus.BAD_REQUEST)
+                ResponseEntity.badRequest().body(false)
             }
         }.subscribeOn(Schedulers.boundedElastic())
 
@@ -199,14 +198,14 @@ class VideoService(
         title: String,
         fileUUID: String,
         userName: String
-    ): Mono<ResponseEntity<HttpStatus>> {
+    ): Mono<ResponseEntity<Boolean>> {
         return videoRepository.save(
             VideoR2dbc(url = fileUUID, title = title, userName = userName,thumbNailUrl = null)
         )
             .map{
-                ResponseEntity.ok().build<HttpStatus>()
+                ResponseEntity.ok(true)
             }
-            .onErrorReturn(ResponseEntity.badRequest().build())
+            .onErrorReturn(ResponseEntity.badRequest().body(false))
     }
 
     private fun extractThumbnail(inputFilePath: String, thumbNailPath: String): Mono<FFmpegBuilder> {
@@ -247,8 +246,6 @@ class VideoService(
             .doOnNext{
                 File(inputFilePath.toString()).delete()
             }
-
-
 
     }
     fun findAll(sort : Sort): Flux<VideoR2dbc> {

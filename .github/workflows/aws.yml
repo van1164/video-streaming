@@ -48,7 +48,7 @@ jobs:
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/streaming:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/streaming:latest
 
-          cd ../live-streamming
+          cd live-streamming
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/nginx-rtmp:ssl .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/nginx-rtmp:ssl
 

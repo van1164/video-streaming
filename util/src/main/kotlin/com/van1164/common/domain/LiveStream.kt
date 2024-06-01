@@ -2,6 +2,7 @@ package com.van1164.common.domain
 
 import com.van1164.common.dto.StreamDTO
 import jakarta.persistence.*
+import org.springframework.data.annotation.CreatedDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
@@ -22,16 +23,16 @@ data class LiveStream(
     @Column(name = "stream_key")
     val streamKey : String,
 
+    @CreatedDate
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "created_at", nullable = false)
-    val createDate : Date= Date.from(
-        LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()
-    ),
+    @Column(name = "created_date", nullable = false)
+    val createdDate : LocalDateTime= LocalDateTime.now(),
 
     @Column(name = "on_air")
     var onAir : Boolean = false,
 
     @Id
+    @org.springframework.data.annotation.Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id : Long? = null,
 

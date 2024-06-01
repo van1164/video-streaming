@@ -17,7 +17,7 @@ data class VideoR2dbc(
     var good : Int = 0,
     var bad : Int = 0,
     @CreatedDate
-    val createDate : LocalDateTime = LocalDateTime.now(),
+    val createdDate : LocalDateTime = LocalDateTime.now(),
     @Id
-    val id : Long? = null
+    val id : Long? = null,
 )

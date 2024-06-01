@@ -41,6 +41,7 @@ jobs:
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > video/src/main/resources/application.properties
 
           touch util/src/main/resources/application.properties
+          mkdir util/src/main/resources
           echo "${{ secrets.UTILL_APPLICATION_PROPERTIES }}" > util/src/main/resources/application.properties
           
           chmod +x gradlew

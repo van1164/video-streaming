@@ -1,6 +1,7 @@
 package com.van1164.main
 
 
+import com.van1164.common.response.MainResponse
 import com.van1164.main.live.LiveReadService
 import com.van1164.main.video.VideoReadService
 import org.springframework.stereotype.Service
@@ -22,6 +23,21 @@ class MainService(
             }
             .doOnNext {
                 mainData["streamList"] = it
+            }
+            .thenReturn(mainData)
+    }
+
+    fun getMainResponse(): Mono<MainResponse> {
+        val mainData = MainResponse()
+        return videoService.findAllSortByDescending().collectList()
+            .doOnNext {
+                mainData.videoList = it
+            }
+            .flatMap {
+                streamService.findAllOnAir().collectList()
+            }
+            .doOnNext {
+                mainData.liveList = it
             }
             .thenReturn(mainData)
     }

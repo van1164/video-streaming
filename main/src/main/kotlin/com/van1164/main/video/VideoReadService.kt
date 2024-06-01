@@ -6,6 +6,7 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 
 @Service
@@ -16,6 +17,11 @@ class VideoReadService(
 
     @Transactional(readOnly = true)
     fun findAllSortByDescending(): Flux<VideoR2dbc> {
-        return videoRepository.findAll(Sort.by("createDate").descending())
+        return videoRepository.findAllByOrderByCreatedDateDesc()
+    }
+
+    @Transactional(readOnly = true)
+    fun findByUrl(url : String): Mono<VideoR2dbc> {
+        return videoRepository.findByUrl(url)
     }
 }

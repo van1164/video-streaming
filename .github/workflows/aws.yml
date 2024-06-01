@@ -40,10 +40,12 @@ jobs:
           echo "${{ secrets.APPLICATION_OAUTH }}" > video/src/main/resources/application-oauth.properties
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > video/src/main/resources/application.properties
 
-
+    
           mkdir util/src/main/resources
           touch util/src/main/resources/application.properties
           echo "${{ secrets.UTILL_APPLICATION_PROPERTIES }}" > util/src/main/resources/application.properties
+
+          cat util/src/main/resources/application.properties
           
           chmod +x gradlew
           ./gradlew clean video:build --exclude-task test

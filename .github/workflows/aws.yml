@@ -36,9 +36,9 @@ jobs:
           touch src/main/resources/application-oauth.properties
           touch src/main/resources/application-prod.properties
           touch src/main/resources/application.properties
-          echo "${{ secrets.APPLICATION_PROD }}" > src/main/resources/application-prod.properties
-          echo "${{ secrets.APPLICATION_OAUTH }}" > src/main/resources/application-oauth.properties
-          echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/main/resources/application.properties
+          echo "${{ secrets.APPLICATION_PROD }}" > video/src/main/resources/application-prod.properties
+          echo "${{ secrets.APPLICATION_OAUTH }}" > video/src/main/resources/application-oauth.properties
+          echo "${{ secrets.APPLICATION_PROPERTIES }}" > video/src/main/resources/application.properties
           cat src/main/resources/application-prod.properties
           chmod +x gradlew
           ./gradlew clean build --exclude-task test

@@ -39,8 +39,10 @@ class MainController(
                     check(token.isNotEmpty())
                 }
                 .flatMap {
-                    val name = jwtTokenProvider.getAuthentication(token!!).name
-                    userService.findByUserId(name)
+                    jwtTokenProvider.getAuthentication(token!!)
+                }
+                .flatMap {name->
+                    userService.findByUserId(name.name)
                 }.doOnNext {user->
                     checkNotNull(user)
                 }

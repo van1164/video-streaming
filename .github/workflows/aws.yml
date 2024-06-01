@@ -33,13 +33,14 @@ jobs:
     # 2. Spring Boot 애플리케이션 빌드
     - name: Build with Gradle
       run: |
-          touch src/main/resources/application-oauth.properties
-          touch src/main/resources/application-prod.properties
-          touch src/main/resources/application.properties
+          touch video/src/main/resources/application-oauth.properties
+          touch video/src/main/resources/application-prod.properties
+          touch video/src/main/resources/application.properties
           echo "${{ secrets.APPLICATION_PROD }}" > video/src/main/resources/application-prod.properties
           echo "${{ secrets.APPLICATION_OAUTH }}" > video/src/main/resources/application-oauth.properties
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > video/src/main/resources/application.properties
-          cat src/main/resources/application-prod.properties
+          cat video/src/main/resources/application-prod.properties
+          cd video
           chmod +x gradlew
           ./gradlew clean build --exclude-task test
           ls
@@ -47,7 +48,7 @@ jobs:
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/streaming:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/streaming:latest
 
-          cd live-streamming
+          cd ../live-streamming
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/nginx-rtmp:ssl .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/nginx-rtmp:ssl
 

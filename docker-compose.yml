@@ -9,14 +9,6 @@ services:
       - tmp:/tmp
   #    restart: unless-stopped
 
-
-  redis:
-    image: redis
-    container_name: redis
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
-
   nginx-rtmp:
     image: van133/nginx-rtmp:ssl
     ports:

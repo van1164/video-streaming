@@ -2,17 +2,18 @@ package com.van1164.common.redis
 
 import lombok.RequiredArgsConstructor
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory
 import org.springframework.data.redis.connection.RedisConnectionFactory
+import org.springframework.data.redis.connection.RedisPassword
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
-import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories
-import org.springframework.data.redis.serializer.RedisSerializationContext
-import org.springframework.data.redis.serializer.RedisSerializationContext.RedisSerializationContextBuilder
 import org.springframework.data.redis.serializer.StringRedisSerializer
 
 @Configuration(value = "redisConfig")
@@ -27,17 +28,30 @@ class RedisConfig {
     @Value("\${spring.data.redis.port}")
     var port: Int = 6379
 
+    @Value("\${spring.data.redis.password}")
+    lateinit var myPassword: String
+
 
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
-        val lettuceConnectionFactory = LettuceConnectionFactory(host, port)
+        val configuration = RedisStandaloneConfiguration().apply {
+            host = host
+            port = port
+            password = RedisPassword.of(myPassword)
+        }
+        val lettuceConnectionFactory = LettuceConnectionFactory(configuration)
         lettuceConnectionFactory.start()
         return lettuceConnectionFactory
     }
 
     @Bean
     fun reactiveRedisConnectionFactory(): ReactiveRedisConnectionFactory {
-        val lettuceConnectionFactory = LettuceConnectionFactory(host, port)
+        val configuration = RedisStandaloneConfiguration().apply {
+            host = host
+            port = port
+            password = RedisPassword.of(myPassword)
+        }
+        val lettuceConnectionFactory = LettuceConnectionFactory(configuration)
         lettuceConnectionFactory.start()
         return lettuceConnectionFactory
     }

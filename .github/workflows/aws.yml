@@ -39,7 +39,11 @@ jobs:
           echo "${{ secrets.APPLICATION_PROD }}" > video/src/main/resources/application-prod.properties
           echo "${{ secrets.APPLICATION_OAUTH }}" > video/src/main/resources/application-oauth.properties
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > video/src/main/resources/application.properties
-          cat video/src/main/resources/application-prod.properties
+
+
+          echo "${{ secrets.UTILL_APPLICATION_PROPERTIES }}" > util/src/main/resources/application.properties
+
+          cat util/src/main/resources/application.properties
           
           chmod +x gradlew
           ./gradlew clean video:build --exclude-task test
@@ -48,7 +52,7 @@ jobs:
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/streaming:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/streaming:latest
 
-          cd ../live-streamming
+          cd live-streamming
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/nginx-rtmp:ssl .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/nginx-rtmp:ssl
 
@@ -71,7 +75,7 @@ jobs:
         script: |
           cd app
           sudo docker compose down
-          suod docker compose pull
+          sudo docker compose pull
           sudo docker rm -f $(sudo docker ps -qa)
           sudo cp -r ../video-streaming/data ./
           pwd

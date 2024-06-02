@@ -23,10 +23,10 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 class RedisConfig {
 
     @Value("\${spring.data.redis.host}")
-    lateinit var host: String
+    lateinit var myHost: String
 
     @Value("\${spring.data.redis.port}")
-    var port: Int = 6379
+    var myPort: Int = 6379
 
     @Value("\${spring.data.redis.password}")
     lateinit var myPassword: String
@@ -35,8 +35,8 @@ class RedisConfig {
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
         val configuration = RedisStandaloneConfiguration().apply {
-            host = host
-            port = port
+            hostName = myHost
+            port = myPort
             password = RedisPassword.of(myPassword)
         }
         val lettuceConnectionFactory = LettuceConnectionFactory(configuration)
@@ -47,10 +47,13 @@ class RedisConfig {
     @Bean
     fun reactiveRedisConnectionFactory(): ReactiveRedisConnectionFactory {
         val configuration = RedisStandaloneConfiguration().apply {
-            host = host
-            port = port
+            hostName = myHost
+            this.port = myPort
             password = RedisPassword.of(myPassword)
         }
+        println(configuration.hostName)
+        println(configuration.port)
+        println(configuration.password)
         val lettuceConnectionFactory = LettuceConnectionFactory(configuration)
         lettuceConnectionFactory.start()
         return lettuceConnectionFactory

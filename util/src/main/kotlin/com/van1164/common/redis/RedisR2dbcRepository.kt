@@ -13,6 +13,15 @@ class RedisR2dbcRepository(
     private val mapper: ObjectMapper
 ) {
 
+    fun increment(key: String): Mono<Long> {
+        return redisTemplate.opsForValue().increment(key)
+    }
+
+    fun decrement(key: String): Mono<Long> {
+        return redisTemplate.opsForValue().decrement(key)
+    }
+
+
     fun save(key : String, value : String, duration: Duration): Mono<Boolean> {
         return redisTemplate.opsForValue().set(key,value, duration)
     }

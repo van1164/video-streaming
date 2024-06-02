@@ -11,7 +11,4 @@ import reactor.core.publisher.Mono
 
 @Repository
 interface CommentRepository : R2dbcRepository<Comment,Long> {
-//    @Lock(LockMode.PESSIMISTIC_WRITE)
-
-
 }

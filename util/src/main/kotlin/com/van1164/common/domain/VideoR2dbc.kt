@@ -16,6 +16,7 @@ data class VideoR2dbc(
     var thumbNailUrl : String?,
     var good : Int = 0,
     var bad : Int = 0,
+    var view : Int = 0,
     @CreatedDate
     val createdDate : LocalDateTime = LocalDateTime.now(),
     @Id

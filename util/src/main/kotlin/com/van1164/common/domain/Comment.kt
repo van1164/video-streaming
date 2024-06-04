@@ -14,6 +14,10 @@ data class Comment(
 
     val videoId: Long,
 
+    var good : Int = 0,
+    var bad : Int = 0,
+
+
     @CreatedDate
     val createdDate : LocalDateTime = LocalDateTime.now(),
 

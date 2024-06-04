@@ -3,6 +3,7 @@ package com.van1164.security
 import com.van1164.common.redis.RedisR2dbcService
 import com.van1164.common.util.Utils.logger
 import com.van1164.user.UserService
+import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
 import org.springframework.security.web.server.DefaultServerRedirectStrategy
 import org.springframework.security.web.server.WebFilterExchange
@@ -41,9 +42,13 @@ class OAuthSuccessHandlerReactive(
                logger.info { "여기는 success 헨들러" }
            }
             .flatMap {
-                val uri = UriComponentsBuilder.newInstance().path("/").queryParam("token",jwt.token).build().toUri()
-                val exchange = webFilterExchange.exchange
-                DefaultServerRedirectStrategy().sendRedirect(exchange,uri)
+                Mono.fromRunnable{
+                    val uri = UriComponentsBuilder.newInstance().path("/").queryParam("token",jwt.token).build().toUri()
+                    val exchange = webFilterExchange.exchange
+                    exchange.response.statusCode = HttpStatus.FOUND
+                    exchange.response.headers.location = uri
+                }
+//                DefaultServerRedirectStrategy().sendRedirect(exchange,uri)
             }
 
 

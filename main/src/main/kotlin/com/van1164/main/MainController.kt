@@ -2,6 +2,7 @@ package com.van1164.main
 
 import com.van1164.common.util.Utils.logger
 import com.van1164.security.JwtTokenProvider
+import com.van1164.security.PrincipalDetails
 import com.van1164.user.UserService
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus.MOVED_PERMANENTLY
@@ -27,23 +28,25 @@ class MainController(
 
     @GetMapping("/")
     fun mainPage(model : Model,@RequestParam(required = false) token : String?): Mono<String> {
-        logger.info { "TESTCCCCCCCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" }
-        logger.info{token}
         return  mainService.getMainPage()
                 .doOnNext {mainData->
                     model.addAllAttributes(mainData)
-                    logger.info{mainData}
                 }
-                .doOnNext {
+                .map {
                     checkNotNull(token)
                     check(token.isNotEmpty())
+                    token
                 }
                 .flatMap {
-                    jwtTokenProvider.getAuthentication(token!!)
+                    jwtTokenProvider.getAuthentication(it)
                 }
-                .flatMap {name->
-                    userService.findByUserId(name.name)
+                .map {name->
+                    checkNotNull((name.principal as PrincipalDetails).name)
+                }
+                .flatMap {userId->
+                    userService.findByUserId(userId)
                 }.doOnNext {user->
+                    println(user.name)
                     checkNotNull(user)
                 }
                 .doOnNext {user->
@@ -52,7 +55,7 @@ class MainController(
                     model.addAttribute("isLogined", "true")
                 }
                 .doOnError {
-                    logger.info { "NULL" }
+                    logger.error { "NULL" }
                     model.addAttribute("user","null")
                     model.addAttribute("isLogined", "false")
                 }

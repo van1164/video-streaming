@@ -1,4 +1,4 @@
-package com.van1164.main
+package com.van1164.main_module
 
 import org.springframework.stereotype.Repository
 

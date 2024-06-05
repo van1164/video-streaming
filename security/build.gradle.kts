@@ -33,9 +33,6 @@ dependencies {
     implementation(project(":user"))
 }
 
-tasks.test {
+tasks.withType<Test> {
     useJUnitPlatform()
-}
-kotlin {
-    jvmToolchain(20)
 }

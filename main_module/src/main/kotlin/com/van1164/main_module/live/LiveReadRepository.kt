@@ -1,4 +1,4 @@
-package com.van1164.main.live
+package com.van1164.main_module.live
 
 import com.van1164.common.domain.LiveStream
 import org.springframework.data.r2dbc.repository.R2dbcRepository

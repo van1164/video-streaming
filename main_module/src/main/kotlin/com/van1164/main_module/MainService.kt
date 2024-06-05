@@ -1,8 +1,8 @@
-package com.van1164.main
+package com.van1164.main_module
 
 
 import com.van1164.common.response.MainResponse
-import com.van1164.main.live.LiveReadService
+import com.van1164.main_module.live.LiveReadService
 import com.van1164.main.video.VideoReadService
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono

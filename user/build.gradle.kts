@@ -22,10 +22,6 @@ dependencies {
     implementation(project(":util"))
 }
 
-tasks.test {
+tasks.withType<Test> {
     useJUnitPlatform()
 }
-kotlin {
-    jvmToolchain(20)
-}
-tasks.register("prepareKotlinBuildScriptModel")

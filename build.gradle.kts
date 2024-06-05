@@ -1,94 +1,53 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
 	id("org.springframework.boot") version "3.2.3"
 	id("io.spring.dependency-management") version "1.1.4"
 	kotlin("jvm") version "1.9.22"
 	kotlin("plugin.spring") version "1.9.22"
-	kotlin("plugin.jpa") version "1.9.22"
 }
 
-group = "com.KY"
-version = "0.0.1-SNAPSHOT"
+val jar: Jar by tasks
+val bootJar: BootJar by tasks
 
-java {
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
-}
+bootJar.enabled = false
+jar.enabled = true
 
-configurations {
-	compileOnly {
-		extendsFrom(configurations.annotationProcessor.get())
+allprojects{
+	group = "com.van1164"
+	version = "0.0.1-SNAPSHOT"
+	repositories {
+		mavenCentral()
 	}
 }
 
-repositories {
-	mavenCentral()
-}
-
-dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-batch")
-	implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
-	implementation("org.springframework.boot:spring-boot-starter-oauth2-authorization-server")
-
-	implementation("org.springframework.boot:spring-boot-starter-security")
-
-	implementation("org.springframework.boot:spring-boot-starter-webflux")
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
-	implementation("org.apache.kafka:kafka-streams")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-	implementation("com.amazonaws:aws-java-sdk-s3:1.12.638")
-	implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
-	implementation("org.springframework.boot:spring-boot-starter-thymeleaf:3.2.3")
-
-	compileOnly("org.projectlombok:lombok")
-	runtimeOnly("com.mysql:mysql-connector-j")
-	annotationProcessor("org.projectlombok:lombok")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("io.projectreactor:reactor-test")
-	testImplementation("org.springframework.batch:spring-batch-test")
-	testImplementation("org.springframework.security:spring-security-test")
-	implementation("io.github.microutils:kotlin-logging:1.12.0")
-
-	//oAuth2
-	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-
-	//jwt
-	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
-	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
-	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
-
-	implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
-	implementation("com.github.jasync-sql:jasync-r2dbc-mysql:2.2.0")
-
-	testImplementation("io.projectreactor:reactor-test:3.6.5")
-
-	// kotest
-	testImplementation("io.kotest:kotest-runner-junit5:5.4.2")
-	testImplementation("io.kotest:kotest-assertions-core:5.4.2")
-	testImplementation("io.kotest.extensions:kotest-extensions-spring:1.1.2")
-
-	// mockk
-	testImplementation("io.mockk:mockk:1.13.8")
-
-}
-
 subprojects {
-	group = "com.KY"
-	version = "0.0.1-SNAPSHOT"
+	apply {
+		plugin("org.springframework.boot")
+		plugin("io.spring.dependency-management")
+		plugin("org.jetbrains.kotlin.plugin.spring")
+		plugin("org.jetbrains.kotlin.jvm")
+		plugin("kotlin")
+		plugin("kotlin-kapt")
+	}
+//	apply(plugin = "org.springframework.boot")
+//	apply(plugin = "io.spring.dependency-management")
+//	apply(plugin = "org.jetbrains.kotlin.plugin.spring")
+//	apply(plugin = "org.jetbrains.kotlin.plugin.jpa")
+//	apply(plugin = "kotlin")
+//	apply(plugin = "kotlin-kapt")
 
 
-	apply(plugin = "org.springframework.boot")
-	apply(plugin = "io.spring.dependency-management")
-	apply(plugin = "org.jetbrains.kotlin.jvm")
-	apply(plugin = "org.jetbrains.kotlin.plugin.spring")
-	apply(plugin = "org.jetbrains.kotlin.plugin.jpa")
-
+//	configurations {
+//		compileOnly {
+//			extendsFrom(configurations.annotationProcessor.get())
+//		}
+//	}
+	java.sourceCompatibility = JavaVersion.VERSION_17
+	java.targetCompatibility = JavaVersion.VERSION_17
 	dependencies {
+		testImplementation("org.jetbrains.kotlin:kotlin-test")
 		implementation("org.jetbrains.kotlin:kotlin-reflect")
 		implementation("org.springframework.boot:spring-boot-starter-webflux")
 		implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -97,7 +56,7 @@ subprojects {
 		compileOnly("org.projectlombok:lombok")
 		runtimeOnly("com.mysql:mysql-connector-j")
 		annotationProcessor("org.projectlombok:lombok")
-		testImplementation("org.springframework.boot:spring-boot-starter-test")
+
 		testImplementation("io.projectreactor:reactor-test")
 		implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
 		implementation("com.github.jasync-sql:jasync-r2dbc-mysql:2.2.0")
@@ -120,36 +79,25 @@ subprojects {
 		implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0")
 		implementation("org.springdoc:springdoc-openapi-starter-webflux-api:2.5.0")
 
-		//
-	}
-
-	configurations {
-		compileOnly {
-			extendsFrom(configurations.annotationProcessor.get())
+		testImplementation("org.springframework.boot:spring-boot-starter-test") {
+			exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 		}
-	}
-	java {
-		sourceCompatibility = JavaVersion.VERSION_17
-		targetCompatibility = JavaVersion.VERSION_17
+		testImplementation("org.junit.jupiter:junit-jupiter-api")
+		testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+
 	}
 
 	tasks.withType<KotlinCompile> {
 		kotlinOptions {
-			freeCompilerArgs += "-Xjsr305=strict"
+			freeCompilerArgs += "-Xjsr305=strict -Dfile.encoding=UTF-8"
 			jvmTarget = "17"
 		}
 	}
 
-}
-
-tasks.withType<KotlinCompile> {
-	kotlinOptions {
-		freeCompilerArgs += "-Xjsr305=strict"
-		jvmTarget = "17"
+	tasks.withType<Test> {
+		systemProperty("file.encoding","UTF-8")
+		useJUnitPlatform()
 	}
-}
 
-tasks.withType<Test> {
-	useJUnitPlatform()
 }
 

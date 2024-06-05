@@ -1,4 +1,4 @@
-package com.van1164.main
+package com.van1164.main_module
 
 import com.van1164.common.util.Utils.logger
 import com.van1164.security.JwtTokenProvider

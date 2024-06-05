@@ -1,8 +1,5 @@
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
-plugins {
-    kotlin("jvm")
-}
 
 group = "com.van1164"
 version = "0.0.1-SNAPSHOT"
@@ -26,7 +23,4 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-}
-kotlin {
-    jvmToolchain(20)
 }

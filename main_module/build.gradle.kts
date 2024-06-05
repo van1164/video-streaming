@@ -1,23 +1,21 @@
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
-
-repositories {
-    mavenCentral()
-}
 val jar: Jar by tasks
 val bootJar: BootJar by tasks
 
 bootJar.enabled = false
 jar.enabled = true
+repositories {
+    mavenCentral()
+}
 
 dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     implementation(project(":util"))
-    implementation(project(":user"))
     implementation(project(":security"))
-    implementation(project(":main_module"))
+    implementation(project(":user"))
 }
 
-tasks.withType<Test> {
+tasks.test {
     useJUnitPlatform()
 }

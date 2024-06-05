@@ -1,11 +1,11 @@
-package com.van1164.main
+package com.van1164.main_module
 
 import com.van1164.common.response.MainResponse
 import com.van1164.common.util.Utils.logger
+import com.van1164.main_module.MainService
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam

@@ -1,4 +1,4 @@
-package com.van1164.common.domain
+package com.van1164.common.domain.comment
 
 
 import org.springframework.data.annotation.CreatedDate

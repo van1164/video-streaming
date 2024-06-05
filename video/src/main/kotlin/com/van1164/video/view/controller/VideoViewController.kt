@@ -1,6 +1,6 @@
 package com.van1164.video.view.controller
 
-import com.van1164.security.PrincipalDetails
+import com.van1164.common.security.PrincipalDetails
 import com.van1164.video.view.service.VideoViewService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal

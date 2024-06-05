@@ -1,6 +1,6 @@
 package com.van1164.common.domain
 
-import com.van1164.common.domain.Comment
+import com.van1164.common.domain.comment.Comment
 import jakarta.persistence.*
 import lombok.ToString
 import org.springframework.data.annotation.CreatedDate

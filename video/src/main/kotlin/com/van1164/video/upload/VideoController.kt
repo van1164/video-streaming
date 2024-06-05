@@ -1,5 +1,5 @@
 package com.van1164.video.upload
-import com.van1164.security.PrincipalDetails
+import com.van1164.common.security.PrincipalDetails
 import com.van1164.common.dto.UploadVideoDataDTO
 import com.van1164.common.dto.UploadVideoPartDTO
 import io.swagger.v3.oas.annotations.Operation
@@ -49,10 +49,10 @@ class VideoController(
     @ResponseBody
     @PostMapping("/saveVideoData")
     fun saveVideoData(
-        @AuthenticationPrincipal user : Mono<PrincipalDetails>,
+        @AuthenticationPrincipal principal : Mono<PrincipalDetails>,
         @RequestBody  uploadVideoDataDTO: UploadVideoDataDTO
     ): Mono<ResponseEntity<Boolean>> {
-        return user.flatMap { user->
+        return principal.flatMap { user->
             videoService.saveVideoData(uploadVideoDataDTO.title,uploadVideoDataDTO.fileUUID,user.name)
         }
     }

@@ -1,16 +1,14 @@
 package com.van1164.comment
 
-import com.van1164.common.domain.Comment
-import com.van1164.security.PrincipalDetails
+import com.van1164.common.domain.comment.Comment
+import com.van1164.common.security.PrincipalDetails
 import com.van1164.user.UserService
 import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody

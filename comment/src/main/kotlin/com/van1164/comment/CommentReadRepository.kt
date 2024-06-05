@@ -1,6 +1,5 @@
 package com.van1164.comment
 
-import com.van1164.common.domain.Comment
 import com.van1164.common.dto.CommentDTO
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.r2dbc.repository.R2dbcRepository

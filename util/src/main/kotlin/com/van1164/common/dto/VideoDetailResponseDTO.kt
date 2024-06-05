@@ -1,6 +1,6 @@
 package com.van1164.common.dto
 
-import com.van1164.common.domain.Comment
+import com.van1164.common.domain.comment.Comment
 
 
 data class VideoDetailResponseDTO(

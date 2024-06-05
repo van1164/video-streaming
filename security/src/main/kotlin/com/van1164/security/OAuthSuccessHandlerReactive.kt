@@ -1,11 +1,11 @@
 package com.van1164.security
 
 import com.van1164.common.redis.RedisR2dbcService
+import com.van1164.common.security.PrincipalDetails
 import com.van1164.common.util.Utils.logger
 import com.van1164.user.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
-import org.springframework.security.web.server.DefaultServerRedirectStrategy
 import org.springframework.security.web.server.WebFilterExchange
 import org.springframework.security.web.server.authentication.ServerAuthenticationSuccessHandler
 import org.springframework.stereotype.Component

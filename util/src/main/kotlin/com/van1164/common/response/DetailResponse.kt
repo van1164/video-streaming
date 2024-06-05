@@ -1,6 +1,5 @@
 package com.van1164.common.response
 
-import com.van1164.common.domain.Comment
 import com.van1164.common.domain.VideoR2dbc
 import com.van1164.common.dto.CommentDTO
 

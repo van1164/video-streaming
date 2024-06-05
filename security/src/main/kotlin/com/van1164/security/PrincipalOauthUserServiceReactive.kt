@@ -3,6 +3,7 @@ package com.van1164.security
 
 import com.van1164.common.dto.*
 import com.van1164.common.domain.UserR2dbc
+import com.van1164.common.security.PrincipalDetails
 import com.van1164.common.util.Utils.logger
 import com.van1164.user.UserService
 import org.springframework.security.oauth2.client.userinfo.DefaultReactiveOAuth2UserService

@@ -1,5 +1,6 @@
 package com.van1164.security
 
+import com.van1164.common.security.PrincipalDetails
 import com.van1164.user.UserService
 import lombok.RequiredArgsConstructor
 import org.springframework.context.annotation.ComponentScan

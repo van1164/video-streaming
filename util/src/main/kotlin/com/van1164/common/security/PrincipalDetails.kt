@@ -1,4 +1,4 @@
-package com.van1164.security
+package com.van1164.common.security
 
 import com.van1164.common.domain.UserR2dbc
 import com.van1164.common.dto.OAuthProvider

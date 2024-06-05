@@ -1,6 +1,6 @@
 package com.van1164.comment.like
 
-import com.van1164.common.domain.CommentLike
+import com.van1164.common.domain.comment.CommentLike
 import org.springframework.data.r2dbc.repository.R2dbcRepository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono

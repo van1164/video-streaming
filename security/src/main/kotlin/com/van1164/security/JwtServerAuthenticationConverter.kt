@@ -12,7 +12,8 @@ class JwtServerAuthenticationConverter(
 ) : ServerAuthenticationConverter {
     override fun convert(exchange: ServerWebExchange?): Mono<Authentication> {
         return Mono.justOrEmpty(exchange?.request?.headers?.getFirst("authorization"))
-            .filter { it.startsWith("Bearer ") }.map { it.substring((7)) }
+            .filter{ it != null}
+            .filter { it!!.startsWith("Bearer ") }.map { it!!.substring((7)) }
             .filter { jwtTokenProvider.validateToken(it) }
             .flatMap { jwt -> jwtTokenProvider.getAuthentication(jwt) }
     }

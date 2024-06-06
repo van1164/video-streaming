@@ -65,6 +65,7 @@ class RedisConfig {
         redisTemplate.connectionFactory = redisConnectionFactory()
         redisTemplate.keySerializer = StringRedisSerializer()
         redisTemplate.valueSerializer = StringRedisSerializer()
+        redisTemplate.setEnableTransactionSupport(true)
         redisTemplate.afterPropertiesSet()
         return redisTemplate
     }

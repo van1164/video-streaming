@@ -7,7 +7,6 @@ import reactor.core.publisher.Mono
 
 
 @Service
-@EnableR2dbcRepositories(basePackageClasses = [UserRepository::class])
 class UserService(
     val userRepository: UserRepository
 ) {

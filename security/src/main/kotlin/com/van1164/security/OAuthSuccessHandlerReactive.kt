@@ -1,6 +1,6 @@
 package com.van1164.security
 
-import com.van1164.common.redis.RedisR2dbcService
+import com.van1164.common.redis.RedisService
 import com.van1164.common.security.PrincipalDetails
 import com.van1164.common.util.Utils.logger
 import com.van1164.user.UserService
@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono
 @Component(value = "authenticationSuccessHandler")
 class OAuthSuccessHandlerReactive(
     val userService: UserService,
-    val redisService: RedisR2dbcService,
+    val redisService: RedisService,
     val jwtTokenProvider: JwtTokenProvider,
 ) : ServerAuthenticationSuccessHandler {
     override fun onAuthenticationSuccess(

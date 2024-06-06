@@ -1,7 +1,7 @@
 package com.van1164.video.like
 
 import com.van1164.common.domain.VideoLike
-import com.van1164.common.redis.RedisR2dbcRepository
+import com.van1164.common.redis.RedisRepository
 import com.van1164.util.VIDEO_LIKE_PREFIX
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -11,7 +11,7 @@ import reactor.kotlin.core.publisher.toMono
 @Service
 class VideoLikeService(
     private val videoLikeRepository: VideoLikeRepository,
-    private val redisR2dbcRepository: RedisR2dbcRepository
+    private val redisRepository: RedisRepository
 ) {
 
     fun videoLike(userName: String, videoId: Long): Mono<ResponseEntity<Long>> {
@@ -19,7 +19,7 @@ class VideoLikeService(
             .flatMap {
                 videoLikeRepository.save(it)
             }.flatMap {
-                redisR2dbcRepository.increment(VIDEO_LIKE_PREFIX+videoId)
+                redisRepository.increment(VIDEO_LIKE_PREFIX+videoId)
             }
             .map {
                 ResponseEntity.ok(it)

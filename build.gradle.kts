@@ -58,8 +58,10 @@ subprojects {
 		annotationProcessor("org.projectlombok:lombok")
 
 		testImplementation("io.projectreactor:reactor-test")
+
 		implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
-		implementation("com.github.jasync-sql:jasync-r2dbc-mysql:2.2.0")
+		implementation("io.asyncer:r2dbc-mysql:1.1.0")
+
 		implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
 
 		implementation("io.github.microutils:kotlin-logging:1.12.0")

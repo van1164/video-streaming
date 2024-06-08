@@ -1,7 +1,7 @@
-package com.van1164.main.video
+package com.van1164.main_module.video
 
 import com.van1164.common.domain.VideoR2dbc
-import org.springframework.data.domain.Sort
+import com.van1164.main_module.video.VideoReadRepository
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

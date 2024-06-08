@@ -3,7 +3,7 @@ package com.van1164.main_module
 
 import com.van1164.common.response.MainResponse
 import com.van1164.main_module.live.LiveReadService
-import com.van1164.main.video.VideoReadService
+import com.van1164.main_module.video.VideoReadService
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 

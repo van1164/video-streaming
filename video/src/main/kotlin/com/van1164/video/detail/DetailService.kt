@@ -2,8 +2,7 @@ package com.van1164.video.detail
 
 import com.van1164.comment.CommentReadRepository
 import com.van1164.common.response.DetailResponse
-import com.van1164.main.video.VideoReadRepository
-import com.van1164.main.video.VideoReadService
+import com.van1164.main_module.video.VideoReadRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service

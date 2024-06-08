@@ -1,4 +1,4 @@
-package com.van1164.main.video
+package com.van1164.main_module.video
 
 import com.van1164.common.domain.VideoR2dbc
 import org.springframework.data.r2dbc.repository.Query

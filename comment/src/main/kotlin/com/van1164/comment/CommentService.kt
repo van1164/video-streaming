@@ -4,7 +4,7 @@ import com.van1164.comment.like.CommentLikeRepository
 import com.van1164.common.domain.comment.Comment
 import com.van1164.common.domain.comment.CommentLike
 import com.van1164.common.util.Utils.logger
-import com.van1164.main.video.VideoReadRepository
+import com.van1164.main_module.video.VideoReadRepository
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service

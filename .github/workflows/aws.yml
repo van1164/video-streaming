@@ -33,12 +33,12 @@ jobs:
     # 2. Spring Boot 애플리케이션 빌드
     - name: Build with Gradle
       run: |
-          touch video/src/main/resources/application-oauth.properties
-          touch video/src/main/resources/application-prod.properties
-          touch video/src/main/resources/application.properties
-          echo "${{ secrets.APPLICATION_PROD }}" > video/src/main/resources/application-prod.properties
-          echo "${{ secrets.APPLICATION_OAUTH }}" > video/src/main/resources/application-oauth.properties
-          echo "${{ secrets.APPLICATION_PROPERTIES }}" > video/src/main/resources/application.properties
+          touch app/src/main/resources/application-oauth.properties
+          touch app/src/main/resources/application-prod.properties
+          touch app/src/main/resources/application.properties
+          echo "${{ secrets.APPLICATION_PROD }}" > app/src/main/resources/application-prod.properties
+          echo "${{ secrets.APPLICATION_OAUTH }}" > app/src/main/resources/application-oauth.properties
+          echo "${{ secrets.APPLICATION_PROPERTIES }}" > app/src/main/resources/application.properties
 
 
           echo "${{ secrets.UTILL_APPLICATION_PROPERTIES }}" > util/src/main/resources/application.properties

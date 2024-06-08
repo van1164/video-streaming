@@ -6,6 +6,7 @@ include("live_stream")
 include("util")
 include("comment")
 include("main_module")
+include("app")
 
 pluginManagement {
     val kotlinVersion: String by settings

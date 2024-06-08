@@ -70,11 +70,5 @@ class MainController(
         return ResponseEntity(headers, MOVED_PERMANENTLY)
 
     }
-//    @GetMapping("/loginPage")
-//    fun loginPage() : String{
-//
-//        return "loginPage"
-//
-//    }
 
 }

@@ -15,8 +15,8 @@ import reactor.core.publisher.Mono
 
 @Controller
 @RequestMapping("/api/v1/upload")
-class VideoController(
-    val videoService: VideoService,
+class UploadController(
+    val uploadService: UploadService,
 ) {
     @ResponseBody
     @PostMapping("/videoPart")
@@ -29,7 +29,7 @@ class VideoController(
         @RequestPart fileUUID : String): Mono<ResponseEntity<Boolean>> {
         return Mono.just(UploadVideoPartDTO(title,chunkNumber.toInt(),totalChunk.toInt(),fileUUID))
             .flatMap {videoData->
-                videoService.uploadVideoPart(video, videoData)
+                uploadService.uploadVideoPart(video, videoData)
             }
             .onErrorReturn (
                 ResponseEntity.badRequest().build()
@@ -41,7 +41,7 @@ class VideoController(
         @PathVariable id : String,
         @PathVariable totalChunk: Int,
      ): Flux<ServerSentEvent<String>> {
-        return videoService.uploadVideoPartLast(id,totalChunk)
+        return uploadService.uploadVideoPartLast(id,totalChunk)
     }
 
 
@@ -53,7 +53,7 @@ class VideoController(
         @RequestBody  uploadVideoDataDTO: UploadVideoDataDTO
     ): Mono<ResponseEntity<Boolean>> {
         return principal.flatMap { user->
-            videoService.saveVideoData(uploadVideoDataDTO.title,uploadVideoDataDTO.fileUUID,user.name)
+            uploadService.saveVideoData(uploadVideoDataDTO.title,uploadVideoDataDTO.fileUUID,user.name)
         }
     }
 

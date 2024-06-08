@@ -1,4 +1,4 @@
-package com.van1164.video.detail
+package com.van1164.app.detail
 
 import com.van1164.common.response.DetailResponse
 import org.springframework.http.ResponseEntity

@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":util"))
     implementation(project(":security"))
     implementation(project(":user"))
+    implementation(project(":video"))
 }
 
 tasks.test {

@@ -1,8 +1,8 @@
-package com.van1164.video.detail
+package com.van1164.app.detail
 
 import com.van1164.comment.CommentReadRepository
 import com.van1164.common.response.DetailResponse
-import com.van1164.main_module.video.VideoReadRepository
+import com.van1164.video.video.VideoRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -14,7 +14,7 @@ import reactor.kotlin.core.publisher.toMono
 class DetailService(
     @Value("\${aws.s3.bucketUrl}")
     val bucketUrl : String,
-    val videoRepository: VideoReadRepository,
+    val videoRepository: VideoRepository,
     val commentRepository: CommentReadRepository
 ) {
     fun loadDetail(detailId : String): Mono<ResponseEntity<DetailResponse>> {

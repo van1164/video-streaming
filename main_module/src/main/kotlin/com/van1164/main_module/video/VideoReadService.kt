@@ -1,8 +1,7 @@
 package com.van1164.main_module.video
 
 import com.van1164.common.domain.VideoR2dbc
-import com.van1164.main_module.video.VideoReadRepository
-import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
+import com.van1164.video.video.VideoRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Flux
@@ -10,9 +9,8 @@ import reactor.core.publisher.Mono
 
 
 @Service
-@EnableR2dbcRepositories(basePackageClasses = [VideoReadRepository::class])
 class VideoReadService(
-    val videoRepository: VideoReadRepository
+    val videoRepository: VideoRepository
 ) {
 
     @Transactional(readOnly = true)

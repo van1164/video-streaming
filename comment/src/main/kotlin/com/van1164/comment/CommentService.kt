@@ -4,7 +4,7 @@ import com.van1164.comment.like.CommentLikeRepository
 import com.van1164.common.domain.comment.Comment
 import com.van1164.common.domain.comment.CommentLike
 import com.van1164.common.util.Utils.logger
-import com.van1164.main_module.video.VideoReadRepository
+import com.van1164.video.video.VideoRepository
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -15,14 +15,14 @@ import reactor.kotlin.core.publisher.toMono
 @Service
 @EnableR2dbcRepositories(basePackageClasses = [CommentRepository::class,CommentReadRepository::class])
 class CommentService(
-    val videoReadRepository: VideoReadRepository,
+    val videoRepository: VideoRepository,
     val commentRepository: CommentRepository,
     val commentLikeRepository: CommentLikeRepository
 ) {
 
     fun createComment(userName: String, videoUrl: String, comment: String): Mono<ResponseEntity<Comment>> {
         logger.info { "createCommnet" }
-        return videoReadRepository.findByUrl(videoUrl)
+        return videoRepository.findByUrl(videoUrl)
             .flatMap {video->
                 val videoId = checkNotNull(video.id)
                 commentRepository.save(

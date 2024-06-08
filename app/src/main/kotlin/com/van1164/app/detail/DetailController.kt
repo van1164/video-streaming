@@ -1,6 +1,6 @@
-package com.van1164.video.detail
+package com.van1164.app.detail
 
-import com.van1164.video.upload.VideoService
+import com.van1164.video.upload.UploadService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 class DetailController(
     @Value("\${aws.s3.bucketUrl}")
     val bucketUrl : String,
-    val videoService: VideoService
+    val uploadService: UploadService
 ) {
 
     @GetMapping("/{detail_id}")

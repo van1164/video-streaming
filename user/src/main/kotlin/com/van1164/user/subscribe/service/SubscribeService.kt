@@ -18,7 +18,6 @@ import reactor.kotlin.core.publisher.toMono
 import java.lang.Exception
 
 @Service
-@EnableR2dbcRepositories(basePackageClasses = [SubscribeRepository::class,UserRepository::class])
 class SubscribeService(
     private val subscribeRepository: SubscribeRepository,
     private val userRepository: UserRepository,

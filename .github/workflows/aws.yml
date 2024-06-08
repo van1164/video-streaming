@@ -46,7 +46,7 @@ jobs:
           cat util/src/main/resources/application.properties
           
           chmod +x gradlew
-          ./gradlew clean video:build --exclude-task test
+          ./gradlew clean app:build --exclude-task test
           ls
           pwd
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/streaming:latest .

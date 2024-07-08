@@ -1,7 +1,4 @@
-repositories {
-    mavenCentral()
-}
-
+tasks.register("prepareKotlinBuildScriptModel"){}
 dependencies {
     implementation(project(":util"))
     implementation(project(":user"))
@@ -9,9 +6,4 @@ dependencies {
     implementation(project(":main_module"))
     implementation(project(":comment"))
     implementation(project(":video"))
-
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
 }

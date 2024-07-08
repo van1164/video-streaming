@@ -1,14 +1,10 @@
-import org.springframework.boot.gradle.tasks.bundling.BootJar
-
-
-repositories {
-    mavenCentral()
+tasks.getByName("bootJar") {
+    enabled = false
 }
-val jar: Jar by tasks
-val bootJar: BootJar by tasks
 
-bootJar.enabled = false
-jar.enabled = true
+tasks.getByName("jar") {
+    enabled = true
+}
 
 dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -18,6 +14,3 @@ dependencies {
     implementation(project(":video"))
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-}

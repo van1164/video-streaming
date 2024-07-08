@@ -1,28 +1,57 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
 	id("org.springframework.boot") version "3.2.3"
-	id("io.spring.dependency-management") version "1.1.4"
+	id("io.spring.dependency-management") version "1.1.5"
+	kotlin("plugin.spring") version "1.9.22" apply false
 	kotlin("jvm") version "1.9.22"
-	kotlin("plugin.spring") version "1.9.22"
 }
 
-val jar: Jar by tasks
-val bootJar: BootJar by tasks
+tasks.getByName("bootJar") {
+	enabled = false
+}
 
-bootJar.enabled = false
-jar.enabled = true
+tasks.getByName("jar") {
+	enabled = true
+}
 
-allprojects{
-	group = "com.van1164"
-	version = "0.0.1-SNAPSHOT"
+
+buildscript {
 	repositories {
 		mavenCentral()
 	}
 }
 
+allprojects{
+	group = "com.van1164"
+	version = "0.0.1-SNAPSHOT"
+
+
+	repositories {
+		mavenCentral()
+	}
+
+	tasks.withType<Test> {
+		useJUnitPlatform()
+	}
+
+
+	tasks.withType<JavaCompile>{
+		sourceCompatibility = "17"
+		targetCompatibility = "17"
+	}
+
+	tasks.withType<KotlinCompile> {
+		kotlinOptions {
+			freeCompilerArgs = listOf("-Xjsr305=strict")
+			jvmTarget = "17"
+		}
+	}
+}
+
 subprojects {
+
+
 	apply {
 		plugin("org.springframework.boot")
 		plugin("io.spring.dependency-management")
@@ -31,24 +60,11 @@ subprojects {
 		plugin("kotlin")
 		plugin("kotlin-kapt")
 	}
-//	apply(plugin = "org.springframework.boot")
-//	apply(plugin = "io.spring.dependency-management")
-//	apply(plugin = "org.jetbrains.kotlin.plugin.spring")
-//	apply(plugin = "org.jetbrains.kotlin.plugin.jpa")
-//	apply(plugin = "kotlin")
-//	apply(plugin = "kotlin-kapt")
 
-
-//	configurations {
-//		compileOnly {
-//			extendsFrom(configurations.annotationProcessor.get())
-//		}
-//	}
-	java.sourceCompatibility = JavaVersion.VERSION_17
-	java.targetCompatibility = JavaVersion.VERSION_17
 	dependencies {
 		testImplementation("org.jetbrains.kotlin:kotlin-test")
 		implementation("org.jetbrains.kotlin:kotlin-reflect")
+		implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 		implementation("org.springframework.boot:spring-boot-starter-webflux")
 		implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 		implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
@@ -81,25 +97,11 @@ subprojects {
 		implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0")
 		implementation("org.springdoc:springdoc-openapi-starter-webflux-api:2.5.0")
 
-		testImplementation("org.springframework.boot:spring-boot-starter-test") {
-			exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
-		}
-		testImplementation("org.junit.jupiter:junit-jupiter-api")
-		testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+		testImplementation("org.springframework.boot:spring-boot-starter-test")
 
-	}
+		testImplementation("com.navercorp.fixturemonkey:fixture-monkey-starter-kotlin:1.0.20")
+		testImplementation("com.navercorp.fixturemonkey:fixture-monkey-jakarta-validation:1.0.20")
 
-	tasks.withType<KotlinCompile> {
-		kotlinOptions {
-			freeCompilerArgs += "-Xjsr305=strict -Dfile.encoding=UTF-8"
-			jvmTarget = "17"
-		}
-	}
-
-	tasks.withType<Test> {
-		systemProperty("file.encoding","UTF-8")
-		useJUnitPlatform()
 	}
 
 }
-

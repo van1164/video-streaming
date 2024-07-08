@@ -1,12 +1,11 @@
-package service
+package com.van1164.subscribe
 
+import com.van1164.app.AppApplication
 import com.van1164.common.redis.RedisRepository
 import com.van1164.common.test.Transaction
 import com.van1164.user.subscribe.service.SubscribeService
 import com.van1164.util.SUBSCRIBE_PREFIX
-import com.van1164.video.VideoApplication
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -14,13 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import org.springframework.test.annotation.Rollback
-import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-
-@SpringBootTest(classes = [VideoApplication::class])
+@SpringBootTest(classes = [AppApplication::class])
 class SubscribeServiceTest @Autowired constructor(
     val subscribeService: SubscribeService,
     val transaction: Transaction,
